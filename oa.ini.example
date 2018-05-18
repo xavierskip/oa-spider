@@ -1,0 +1,22 @@
+[jzwjw]
+user = jzwjw
+passwd = 123
+[hbcdc]
+user = hbcdc
+passwd = 123
+[hbwjw]
+user = hbwjw
+passwd = 123
+[config]
+# 修改默认日志文件路径
+; log_file = /Users/Desktop/spider.txt
+# 修改默认保存下载文件路径
+; inbox_path = /Users/Desktop/inbox
+[mail]
+# mutt
+subject = 邮件标题
+address = to@163.com,test@qq.com  ;多个邮件地址用逗号分割
+# smtp
+host = smtp.163.com
+account = from@163.com
+passwd = password

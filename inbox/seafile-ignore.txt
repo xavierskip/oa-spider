@@ -1,0 +1,4 @@
+# git repo
+README.md
+# itself
+seafile-ignore.txt

@@ -1,0 +1,1 @@
+`. ./settestenv.sh` to set the PYTHONPATH
