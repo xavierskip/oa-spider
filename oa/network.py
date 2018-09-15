@@ -5,7 +5,8 @@
 import ctypes
 import socket
 import struct
-
+import subprocess
+from sys import platform
 
 def getroute():
     DWORD = ctypes.c_ulong
@@ -115,3 +116,25 @@ def getroute():
             IpForwardTablelist.append(IpForwardDcit)
 
     return IpForwardTablelist
+
+def check_route():
+    IpForwardTablelist = getroute()
+    for tmp in IpForwardTablelist:
+        if tmp['ForwardDest'].startswith('2.0.1.'):
+            return True
+    else:
+        return False
+
+
+def check_ppp0():
+    r = subprocess.call(['/sbin/ifconfig', 'ppp0'])  # absolute path to be use in crontab
+    return True if r == 0 else False
+
+
+def check_hbwjw_vpn():
+    if platform.startswith('win'):
+        return check_route()
+    elif platform.startswith('linux') or platform.startswith('darwin'):
+        return check_ppp0()
+    else:
+        return False

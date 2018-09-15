@@ -1,38 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
-import subprocess
 import os
 import time
-from sys import platform
 from oa import JZWJW_NEW, HBCDC, HBWJW, logger, OA_ini, LoginFailError
-from oa.notification import send_email, send_mutt, generate_mail_content
-from oa.network import getroute
+from oa.notification import send_email, generate_mail_content
+from oa.network import check_hbwjw_vpn
 from requests.exceptions import ReadTimeout, ConnectionError
 from smtplib import SMTPException
-
-
-def check_route():
-    IpForwardTablelist = getroute()
-    for tmp in IpForwardTablelist:
-        if tmp['ForwardDest'].startswith('2.0.1.'):
-            return True
-    else:
-        return False
-
-
-def check_ppp0():
-    r = subprocess.call(['/sbin/ifconfig', 'ppp0'])  # absolute path to be use in crontab
-    return True if r == 0 else False
-
-
-def check_vpn():
-    if platform.startswith('win'):
-        return check_route()
-    elif platform.startswith('linux') or platform.startswith('darwin'):
-        return check_ppp0()
-    else:
-        return False
-
 
 
 def todo(ini):
@@ -58,7 +32,7 @@ def todo(ini):
         except LoginFailError:
             pass
     if ini.has_option('hbwjw', 'user'):
-        if check_vpn():
+        if check_hbwjw_vpn():
             logger.info(u"VPN 已经连接.")
             try:
                 u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
