@@ -16,6 +16,9 @@ from mylog import spiderlog as logger
 from captcha import hack_captcha
 
 
+class LoginFailError(Exception):
+    pass
+
 def guess_abstract(string, len=36):
     # gs = re.finditer(u'[\u4E00-\u9FA5]', string)
     # chars = []
@@ -78,7 +81,7 @@ def need_auth(func):
             return func(self, *args, **kw)
         else:
             logger.info(u'%s登录失败', self)
-            pass
+            raise LoginFailError
 
     return wrapper
 
@@ -127,6 +130,11 @@ class Spider(object):
     def save_doc(self, data):
         """
         mkdir dir to save the document attachements
+        data = {
+            'title': 'title',
+            'note': 'note',
+            'files': [('url', 'name'),...]
+        }
         """
         FILENAMES.setdefault(self.NAME, []).append(data)
         title = data['title'].strip()
@@ -138,10 +146,10 @@ class Spider(object):
         for i, (url, name) in enumerate(data['files'], 1):
             self.download_file(url, name, path, '(%s/%s)' % (i, len(data['files'])))
 
-    def download_file(self, url, name, path, flag=''):
+    def download_file(self, url, name, path, flag='', timeout=200):
         output = StringIO.StringIO()
         start = time.time()
-        r = self.session.get(url, stream=True)
+        r = self.session.get(url, stream=True, timeout=timeout)
         length = int(r.headers.get('content-length', 0))
         save = 0.0
         modulus = 1024
@@ -186,7 +194,7 @@ class HBCDC(Spider):
             'username': username,
             'password': password,
         }
-        r = self.session.post(self.LOGIN_URL, data=payload, timeout=10)
+        r = self.session.post(self.LOGIN_URL, data=payload, timeout=30)
         if r.json()['success']:
             return True
         else:
@@ -308,7 +316,7 @@ class HBWJW(Spider):
             'xingming': username.decode('utf-8').encode('gbk'),
             'mima': password,
         }
-        r = self.session.post(self.LOGIN_URL, data=payload, allow_redirects=False, timeout=10)
+        r = self.session.post(self.LOGIN_URL, data=payload, allow_redirects=False, timeout=30)
         if r.status_code == 302 and r.headers['location'] == 'index.php3?url=&menuid=':
             return True
         else:
@@ -445,6 +453,7 @@ class HBWJW(Spider):
         self.newdoc_logit(len(links))
 
 
+# ABANDON!
 class JZWJW(Spider):
     NAME = u'荆州市卫计委'
     ORIGIN = 'http://219.140.163.109:9090'
@@ -565,3 +574,67 @@ class JZWJW(Spider):
     @need_auth
     def test_decorator(self, a='test'):
         print(a, 'Decorator test!!!')
+
+class JZWJW_NEW(Spider):
+    NAME = u'荆州市卫计委'
+    ORIGIN = 'http://172.23.254.254:8888/yzoa'
+    LOGIN_URL = '%s/user/login' % ORIGIN
+
+    def login(self, username, password):
+        payload = {
+            'userName': username,
+            'password': password
+        }
+        r = self.session.post(self.LOGIN_URL, data=payload, timeout=30)
+        rs = r.json()
+        return rs['result']
+
+    @need_auth
+    def get_documents_json(self, page=1, rows=40):
+        url = '%s/oa/sendDocumentUser/list' % self.ORIGIN
+        payload = {
+            'page': page,
+            'rows': rows,
+            'sourceType': 1
+        }
+        r = self.session.post(url, data=payload)
+        return r.json()
+
+    @need_auth
+    def get_attachment_json(self, documentId):
+        url = '%s/oa/document/file/list' % self.ORIGIN
+        payload = {
+            'documentId': documentId
+        }
+        r = self.session.get(url, params=payload)
+        return r.json()
+
+    def sendDocument_download_url(self, id):
+        return "%s/oa/sendDocument/download/%s" %(self.ORIGIN, id)
+
+    def document_download_url(self, id):
+        return "%s/oa/document/file/download/%s" %(self.ORIGIN, id)
+
+    def do(self, todo=1):
+        docs = self.get_documents_json()['rows']
+        if todo:
+            f = lambda x: x['isReceived'] != '2'
+            docs = filter(f, docs)
+        for doc in docs:
+            doc_dict = doc['sendDocument']
+            data = {
+                'title': doc_dict['title'],
+                'note': doc_dict['content'],  # unknow
+                'files': [],
+            }
+            url, name = self.sendDocument_download_url(doc_dict['id']), doc_dict['docuFileName']
+            data['files'].append((url, name))
+            # add attachment
+            for i in self.get_attachment_json(doc_dict['id']):
+                url, name = self.document_download_url(i['id']), i['fileName']
+                data['files'].append((url, name))
+            self.save_doc(data)
+
+        # too repeat
+        self.newdoc_logit(len(docs))
+
