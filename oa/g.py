@@ -23,6 +23,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 fsencoding = sys.getfilesystemencoding()  #  windows xp is mbcs
 HERE = HERE.decode(fsencoding)
 
+# print(HERE)
+
 CONFIG = {
     'DEBUG': 0,
     'INI': os.path.join(HERE, os.pardir, 'oa.ini'),

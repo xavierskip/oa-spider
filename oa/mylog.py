@@ -65,9 +65,3 @@ def ready4log():
     mh = logging.FileHandler(CONFIG['MAILFILE'], mode='w', encoding='utf-8')
     mh.setFormatter(fmt)
     maillog.addHandler(mh)
-
-
-def load_config(config):
-    for k, v in config.items('config'):
-        CONFIG[k.upper()] = v.decode('utf-8')
-    ready4log()

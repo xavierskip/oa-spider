@@ -19,7 +19,7 @@ send_email(
 
 '''
 
-def mail_content():
+def generate_mail_content():
     html = ''
     for name, dataset in FILENAMES.items():
         li = ''
