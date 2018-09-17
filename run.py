@@ -26,7 +26,7 @@ def main(ini):
         try:
             u, p = ini.get('hbcdc', 'user'), ini.get('hbcdc', 'passwd')
             hbcdc = HBCDC(u, p)
-            hbcdc.todo()
+            hbcdc.do()
         except (ReadTimeout, ConnectionError) as e:
             logger.error(e)
         except LoginFailError:
@@ -37,7 +37,7 @@ def main(ini):
             try:
                 u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
                 hbwjw = HBWJW(u, p)
-                hbwjw.todo()
+                hbwjw.do()
             except (ReadTimeout, ConnectionError) as e:
                 logger.error(e)
             except LoginFailError:

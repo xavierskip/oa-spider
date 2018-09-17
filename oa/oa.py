@@ -104,14 +104,13 @@ class Spider(object):
                 self.auth = False
                 logger.info(u'%s登录失败', self)
 
-
     def __unicode__(self):
         return getattr(self, "NAME", None) or type(self).__name__
 
     def login(self, u, p):
         return True
 
-    def newdoc_logit(self, count):
+    def downloadfile_info(self, count):
         if count > 0:
             logger.info(u'%s有%d个新文件' % (self, count))
         else:
@@ -174,6 +173,13 @@ class Spider(object):
         d = '\r{} {}|{} {:.1f}s {}'.format(flag, sizeof_fmt(save), sizeof_fmt(length), time.time() - start, r.url)
         logger.info(d)
 
+    @need_auth
+    def do(self,todo=1):
+        documents = self.todo(todo)
+        for doc_data in documents:
+            self.save_doc(doc_data)
+        self.downloadfile_info(len(documents))
+
 
 class HBCDC(Spider):
     NAME = u'湖北省疾控中心'
@@ -197,22 +203,22 @@ class HBCDC(Spider):
         else:
             return False
 
-    def doc_query(self):
+    def doc_query(self, sort_s='CreatedTime', dir_s='desc', page=1, start=0, limit=25):
         """ POST return json
         """
         query_url = 'http://oa.hbcdc.com/OA/Flow/Index/Query'
         payload = {
             'Q_Userid_S_EQ': self.UID,
-            'sort': 'CreatedTime',
-            'dir': 'desc',
+            'sort': sort_s,
+            'dir': dir_s,
             'Q_Title_S_LK': '',
             'Q_Type_S_EQ': '',
             'Q_ReadStatus_I_EQ': '',
             'Q_CreatedTime_D_GT': '',
             'Q_CreatedTime_D_LT': '',
-            'page': 1,
-            'start': 0,
-            'limit': 25,
+            'page': page,
+            'start': start,
+            'limit': limit,
         }
         return self.session.post(query_url, data=payload)
 
@@ -267,8 +273,28 @@ class HBCDC(Spider):
             'files': [('%s?id=%s' % (self.DOWNLOAD_URL, i), name) for i, name in ids_names],
         }
 
-    @need_auth
-    def __todo(self):  # abandoned
+    def todo(self, unread=1):
+        documents = []
+        index = self.doc_query()
+        for doc in index.json()['data']:
+            if doc['ReadStatus'] == 0:
+                if doc['Type'] == u'文件':
+                    doc_data = self.doc_parser(doc['Id'])
+                    documents.append(data)
+                elif doc['Type'] == u'邮件':
+                    doc_data = self.mail_parser(doc['Id'])
+                    documents.append(data)
+                # todo:
+                # elif doc['Type'] == u'公文':
+                #     pass
+                else:
+                    logger.info(u'miss type %s\n%s' %(doc['Type'], doc))
+            # else:
+                # pass
+        return documents
+
+    # ABANDON!
+    def __todo(self):  
         todo = self.todo_query()
         todo_page = PyQuery(todo.text)
         i = 0  # when for loop is empty for the logger.info()
@@ -281,26 +307,6 @@ class HBCDC(Spider):
                 self.save_doc(data)
 
         self.newdoc_logit(i)
-
-    @need_auth
-    def todo(self):
-        index = self.doc_query()
-        count = 0  # count of to read files
-        for doc in index.json()['data']:
-            if CONFIG['DEBUG']:
-                print(doc['Title'])
-            elif doc['ReadStatus'] == 0:
-                count += 1
-                if doc['Type'] == u'文件':
-                    data = self.doc_parser(doc['Id'])
-                    self.save_doc(data)
-                elif doc['Type'] == u'邮件':
-                    data = self.mail_parser(doc['Id'])
-                    self.save_doc(data)
-                else:
-                    logger.info(u'miss type %s', doc['Type'])
-
-        self.newdoc_logit(count)
 
 
 class HBWJW(Spider):
@@ -398,46 +404,34 @@ class HBWJW(Spider):
             ],
         }
 
-    @need_auth
-    def todo(self):
+    def todo(self, unread=1):
+        documents = []
+        url_list = []
         news_pq = PyQuery(self.get_new_docs().content.decode('gbk'))
         mails_pq = PyQuery(self.get_new_mails().content.decode('gbk'))
-        i = 0
-        url_list = []
-        for i, e in enumerate(news_pq('.ul1 li').items(), 1):
-            # name = e.children().attr['title']
-            url_list.append(self.card_show(self.ORIGIN + e('a').attr['href']))
 
-        for i, e in enumerate(mails_pq('.ul1 li').items(), i + 1):
+        for ele in news_pq('.ul1 li').items():
             # name = e.children().attr['title']
-            url_list.append(self.to_url(self.ORIGIN + e('a').attr['href']))
+            url_list.append(self.card_show(self.ORIGIN + ele('a').attr['href']))
+
+        for ele in mails_pq('.ul1 li').items():
+            # name = e.children().attr['title']
+            url_list.append(self.to_url(self.ORIGIN + ele('a').attr['href']))
 
         for url in url_list:
             if url.find('/cards/action/cardshow.php3') != -1:
-                data = self.doc_parser(url)
-                self.save_doc(data)
+                doc_data = self.doc_parser(url)
+                documents.append(doc_data)
             elif url.find('/showxx/showxx.php') != -1:
-                data = self.mail_parser(url)
-                self.save_doc(data)
+                doc_data = self.mail_parser(url)
+                documents.append(doc_data)
             else:
                 # print('unknow url', url)
-                logger.error('unknow url: %s' %url)
+                logger.error('%s unknow url: %s' %(self, url))
 
-        self.newdoc_logit(i)
+        return documents
 
-    @need_auth
-    def __todo(self, page=1):  # abandoned
-        links = self.fetch_todo_mail_urls(page)
-        for url, name in links:
-            if CONFIG['DEBUG']:
-                print(url, name)
-            else:
-                data = self.mail_parser(url)
-                self.save_doc(data)
-
-        self.newdoc_logit(len(links))
-
-    @need_auth
+    # ABANDON!
     def test(self, page=1):
         links = self.fetch_mail_urls(page)
         for url, name in links:
@@ -449,9 +443,21 @@ class HBWJW(Spider):
 
         self.newdoc_logit(len(links))
 
+    @need_auth
+    def __todo(self, page=1): 
+        links = self.fetch_todo_mail_urls(page)
+        for url, name in links:
+            if CONFIG['DEBUG']:
+                print(url, name)
+            else:
+                data = self.mail_parser(url)
+                self.save_doc(data)
 
-# ABANDON!
-class JZWJW(Spider):
+        self.newdoc_logit(len(links))
+
+
+#ABANDON!
+class JZWJW(Spider):  # abandoned!
     NAME = u'荆州市卫计委'
     ORIGIN = 'http://219.140.163.109:9090'
     LOGIN_URL = '%s/oa/function/org/login.action' % ORIGIN
@@ -572,6 +578,7 @@ class JZWJW(Spider):
     def test_decorator(self, a='test'):
         print(a, 'Decorator test!!!')
 
+
 class JZWJW_NEW(Spider):
     NAME = u'荆州市卫计委'
     ORIGIN = 'http://172.23.254.254:8888/yzoa'
@@ -586,7 +593,6 @@ class JZWJW_NEW(Spider):
         rs = r.json()
         return rs['result']
 
-    @need_auth
     def get_documents_json(self, page=1, rows=40):
         url = '%s/oa/sendDocumentUser/list' % self.ORIGIN
         payload = {
@@ -597,7 +603,6 @@ class JZWJW_NEW(Spider):
         r = self.session.post(url, data=payload)
         return r.json()
 
-    @need_auth
     def get_attachment_json(self, documentId):
         url = '%s/oa/document/file/list' % self.ORIGIN
         payload = {
@@ -606,32 +611,32 @@ class JZWJW_NEW(Spider):
         r = self.session.get(url, params=payload)
         return r.json()
 
-    def sendDocument_download_url(self, id):
+    def sendDocument_download_URL(self, id):
         return "%s/oa/sendDocument/download/%s" %(self.ORIGIN, id)
 
-    def document_download_url(self, id):
+    def document_download_URL(self, id):
         return "%s/oa/document/file/download/%s" %(self.ORIGIN, id)
 
-    def do(self, todo=1):
+    def todo(self, unread=1):
+        documents = []
         docs = self.get_documents_json()['rows']
-        if todo:
+        if unread:  # filter received documents
             f = lambda x: x['isReceived'] != '2'
             docs = filter(f, docs)
         for doc in docs:
             doc_dict = doc['sendDocument']
-            data = {
+            doc_data = {
                 'title': doc_dict['title'],
                 'note': doc_dict['content'],  # unknow
                 'files': [],
             }
-            url, name = self.sendDocument_download_url(doc_dict['id']), doc_dict['docuFileName']
-            data['files'].append((url, name))
-            # add attachment
+            # sendDocument file
+            url, name = self.sendDocument_download_URL(doc_dict['id']), doc_dict['docuFileName']
+            doc_data['files'].append((url, name))
+            # attachment files
             for i in self.get_attachment_json(doc_dict['id']):
-                url, name = self.document_download_url(i['id']), i['fileName']
-                data['files'].append((url, name))
-            self.save_doc(data)
+                url, name = self.document_download_URL(i['id']), i['fileName']
+                doc_data['files'].append((url, name))
+            documents.append(doc_data)
 
-        # too repeat
-        self.newdoc_logit(len(docs))
-
+        return documents
