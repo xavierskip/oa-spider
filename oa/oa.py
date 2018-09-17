@@ -222,21 +222,6 @@ class HBCDC(Spider):
         }
         return self.session.post(query_url, data=payload)
 
-    def todo_query(self):
-        """ POST return HTML
-        """
-        todo_url = 'http://oa.hbcdc.com/OA/Flow/Index/Todo'
-        payload = {
-            'Q_Userid_S_EQ': self.UID,
-            'Q_ReadStatus_I_EQ': 0,
-            'Q_Type_S_IN': '公文,文件,内部请示报告',
-            'start': 0,
-            'limit': 100,
-            'sort': 'CreatedTime',
-            'dir': 'desc',
-        }
-        return self.session.post(todo_url, data=payload)
-
     def doc_parser(self, doc_id):
         read = self.session.post(self.FRec_URL, data={'id': doc_id}).json()['data']
         detail = self.session.post(self.FProc_URL, data={'id': read['FileProcessId']})
@@ -273,6 +258,28 @@ class HBCDC(Spider):
             'files': [('%s?id=%s' % (self.DOWNLOAD_URL, i), name) for i, name in ids_names],
         }
 
+    def official_parser(self, Id):
+        url = 'http://oa.hbcdc.com/FlowPortal/Workspace/HBCDC/OD/HBSWSheet.aspx'
+        payload = {
+            'Mode': 'Print',
+            'WorkItemID': Id
+        }
+        headers = {'Accept-Language': 'zh-CN'} # i don't know why should add this request header
+        r = self.session.get(url, params=payload, headers=headers)
+        official_content = PyQuery(r.text)
+        ele_title = official_content('#ctrlTitle')
+        # get Attachment file
+        att_url = 'http://oa.hbcdc.com/Platform/Sys/Attachment/Read'
+        att_id = official_content('#ctrlContentFile').text()
+        att_r = self.session.post(att_url, data={'id': att_id})
+        filename = att_r.json()['data']['FileName']
+        fileURL = '%s?id=%s' % (self.DOWNLOAD_URL, att_id)
+        return {
+            'title': ele_title.text(),
+            'note': r.text,
+            'files': [(fileURL, filename)],  # something trouble
+        }
+
     def todo(self, unread=1):
         documents = []
         index = self.doc_query()
@@ -284,9 +291,9 @@ class HBCDC(Spider):
                 elif doc['Type'] == u'邮件':
                     doc_data = self.mail_parser(doc['Id'])
                     documents.append(data)
-                # todo:
-                # elif doc['Type'] == u'公文':
-                #     pass
+                elif doc['Type'] == u'公文':
+                    doc_data = self.official_parser(doc['Id'])
+                    documents.append(data)
                 else:
                     logger.info(u'miss type %s\n%s' %(doc['Type'], doc))
             # else:
@@ -294,6 +301,21 @@ class HBCDC(Spider):
         return documents
 
     # ABANDON!
+    def todo_query(self):
+        """ POST return HTML
+        """
+        todo_url = 'http://oa.hbcdc.com/OA/Flow/Index/Todo'
+        payload = {
+            'Q_Userid_S_EQ': self.UID,
+            'Q_ReadStatus_I_EQ': 0,
+            'Q_Type_S_IN': '公文,文件,内部请示报告',
+            'start': 0,
+            'limit': 100,
+            'sort': 'CreatedTime',
+            'dir': 'desc',
+        }
+        return self.session.post(todo_url, data=payload)
+
     def __todo(self):  
         todo = self.todo_query()
         todo_page = PyQuery(todo.text)
