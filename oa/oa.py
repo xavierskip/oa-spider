@@ -74,18 +74,6 @@ def url_params(url):
     return params
 
 
-def need_auth(func):
-    def wrapper(self, *args, **kw):
-        if self.auth:
-            logger.info(u'%s登录成功', self)
-            return func(self, *args, **kw)
-        else:
-            logger.info(u'%s登录失败', self)
-            raise LoginFailError
-
-    return wrapper
-
-
 def sizeof_fmt(num, suffix='B', modulus=1024):
     for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
         if abs(num) < float(modulus):
@@ -94,19 +82,28 @@ def sizeof_fmt(num, suffix='B', modulus=1024):
     return "%.1f%s%s" % (num, 'Y', suffix)
 
 
+def need_auth(func):  # oa system should login to do something
+    def wrapper(self, *args, **kw):
+        if self.auth:
+            return func(self, *args, **kw)
+        else:
+            raise LoginFailError
+
+    return wrapper
+
+
 class Spider(object):
     NAME = "spider"
     def __init__(self, username='', password=''):
         self.session = requests.Session()
         if username and password:
-            try:
-                if self.login(username, password):
-                    self.auth = True
-                else:
-                    self.auth = False
-            except ConnectionError as e:
+            if self.login(username, password):
+                self.auth = True
+                logger.info(u'%s登录成功', self)
+            else:
                 self.auth = False
-                logger.error(e)
+                logger.info(u'%s登录失败', self)
+
 
     def __unicode__(self):
         return getattr(self, "NAME", None) or type(self).__name__

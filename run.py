@@ -9,7 +9,7 @@ from requests.exceptions import ReadTimeout, ConnectionError
 from smtplib import SMTPException
 
 
-def todo(ini):
+def main(ini):
     """
     catch ReadTimeout error for website is down
     """
@@ -52,7 +52,7 @@ def todo(ini):
 if __name__ == '__main__':
     ini = OA_ini
     try:
-        notification = todo(ini)
+        notification = main(ini)
         if notification:
             step = 0
             while step < 3:
