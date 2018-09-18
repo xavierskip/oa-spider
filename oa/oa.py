@@ -287,10 +287,10 @@ class HBCDC(Spider):
             if doc['ReadStatus'] == 0:
                 if doc['Type'] == u'文件':
                     doc_data = self.doc_parser(doc['Id'])
-                    documents.append(data)
+                    documents.append(doc_data)
                 elif doc['Type'] == u'邮件':
                     doc_data = self.mail_parser(doc['Id'])
-                    documents.append(data)
+                    documents.append(doc_data)
                 elif doc['Type'] == u'公文':
                     doc_data = self.official_parser(doc['Id'])
                     documents.append(doc_data)
