@@ -293,7 +293,7 @@ class HBCDC(Spider):
                     documents.append(data)
                 elif doc['Type'] == u'公文':
                     doc_data = self.official_parser(doc['Id'])
-                    documents.append(data)
+                    documents.append(doc_data)
                 else:
                     logger.info(u'miss type %s\n%s' %(doc['Type'], doc))
             # else:
