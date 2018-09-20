@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
-import logging
-import os
 from g import CONFIG
-
+import logging
+import logging.handlers
+import os
 
 
 # http://stackoverflow.com/a/8349076/1265727
@@ -41,27 +41,46 @@ class MyFormatter(logging.Formatter):
 
         return result
 
+fmt = MyFormatter()
 
-spiderlog = logging.getLogger('oa')
-maillog = logging.getLogger('mail')
+spiderloger = logging.getLogger('oa')
+spiderloger.setLevel(logging.DEBUG)
+mailoger    = logging.getLogger('mail')
+mailoger.setLevel(logging.DEBUG)
 
-spiderlog.setLevel(logging.DEBUG)
-maillog.setLevel(logging.DEBUG)
-
-
-# wait for load config
-def ready4log():
-    fmt = MyFormatter()
-
+# wait __init__ to load config
+def logger_configure(ini):
+    # spiderloger
     sh = logging.StreamHandler()
+    sh.setLevel(logging.DEBUG)
     sh.setFormatter(fmt)
-    spiderlog.addHandler(sh)
+    spiderloger.addHandler(sh)
 
     if os.getenv('oa_spider') != 'debug':
         fh = logging.FileHandler(CONFIG['LOG_FILE'], encoding='utf-8')
+        sh.setLevel(logging.INFO)
         fh.setFormatter(fmt)
-        spiderlog.addHandler(fh)
+        spiderloger.addHandler(fh)
 
-    mh = logging.FileHandler(CONFIG['MAILFILE'], mode='w', encoding='utf-8')
-    mh.setFormatter(fmt)
-    maillog.addHandler(mh)
+    smtp = logging.handlers.SMTPHandler(
+        ini.get('mail', 'host'),
+        ini.get('mail', 'account'),
+        ini.get('mail', 'address').split(','),
+        "[WARNING]oa-spider",
+        credentials=(ini.get('mail', 'account'), ini.get('mail', 'passwd')),
+        )
+    smtp.setLevel(logging.WARNING)
+    spiderloger.addHandler(smtp)
+
+    #mailoger
+    mail = logging.handlers.SMTPHandler(
+        ini.get('mail', 'host'),
+        ini.get('mail', 'account'),
+        ini.get('mail', 'address').split(','),
+        ini.get('mail', 'subject'),
+        credentials=(ini.get('mail', 'account'), ini.get('mail', 'passwd')),
+        )
+    mail.setLevel(logging.INFO)
+    mailoger.addHandler(mail)
+
+    
