@@ -3,7 +3,7 @@
 from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import parseaddr, formataddr
-from oa import FILENAMES
+from g import FILENAMES
 import smtplib
 import subprocess
 
@@ -19,7 +19,7 @@ send_email(
 
 '''
 
-def generate_mail_content():
+def get_mail_digest():
     html = ''
     for name, dataset in FILENAMES.items():
         li = ''
