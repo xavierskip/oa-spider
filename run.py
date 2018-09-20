@@ -2,8 +2,10 @@
 # coding: utf-8
 import os
 import time
-from oa import JZWJW_NEW, HBCDC, HBWJW, logger, OA_ini, LoginFailError
-from oa.notification import send_email, generate_mail_content
+from oa import JZWJW_NEW, HBCDC, HBWJW, OAini
+from oa.exceptions import LoginFailError
+from oa.logger import spiderloger, mailoger
+from oa.notification import get_mail_digest
 from oa.network import check_hbwjw_vpn
 from requests.exceptions import ReadTimeout, ConnectionError
 from smtplib import SMTPException
@@ -19,7 +21,7 @@ def main(ini):
             jzwjw = JZWJW_NEW(u, p)
             jzwjw.do()
         except (ReadTimeout, ConnectionError) as e:
-            logger.error(e)
+            spiderloger.error(e, exc_info=True)
         except LoginFailError:
             pass
     if ini.has_option('hbcdc', 'user'):
@@ -28,62 +30,46 @@ def main(ini):
             hbcdc = HBCDC(u, p)
             hbcdc.do()
         except (ReadTimeout, ConnectionError) as e:
-            logger.error(e)
+            spiderloger.error(e, exc_info=True)
         except LoginFailError:
             pass
     if ini.has_option('hbwjw', 'user'):
         if check_hbwjw_vpn():
-            logger.info(u"VPN 已经连接.")
+            spiderloger.info(u"VPN 已经连接.")
             try:
                 u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
                 hbwjw = HBWJW(u, p)
                 hbwjw.do()
             except (ReadTimeout, ConnectionError) as e:
-                logger.error(e)
+                spiderloger.error(e, exc_info=True)
             except LoginFailError:
                 pass
         else:
-            logger.info(u"VPN 未连接. HBWJW can't access.")
-    notification = generate_mail_content()
-    # maillog.debug(notification)  # 保存通知文件以便通过其他程序发送邮件
-    return notification
+            spiderloger.warning(u"VPN disconnect. HBWJW can't access.")
+    digest = get_mail_digest()
+    return digest
 
 
 if __name__ == '__main__':
-    ini = OA_ini
     try:
-        notification = main(ini)
-        if notification:
+        digest = main(OAini)
+        if digest:
             step = 0
             while step < 3:
                 try:
-                    logger.debug(u'...发送邮件:%s...' % (step + 1))
-                    send_email(
-                        ini.get('mail', 'host'),
-                        ini.get('mail', 'account'),
-                        ini.get('mail', 'passwd'),
-                        ini.get('mail', 'address').split(','),
-                        ini.get('mail', 'subject'),
-                        notification
-                    )
+                    spiderloger.debug(u'...通知中...%s...' % (step + 1))
+                    mailoger.info(digest)
                     step = 3
                 except SMTPException as smtperr:
                     step += 1
+                    spiderloger.WARNING(smtperr, exc_info=True)
+                    # debug
                     file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mailerr.log')
                     with open(file, 'a') as f:
-                        f.write(notification)
-                    logger.debug(smtperr)
-                    time.sleep(1)
+                        f.write(digest)
+                    time.sleep(1)  # wait and try send mail again
         else:
+            # no unreader documents
             pass
     except Exception as e:
-        logger.exception(e)
-        logger.debug(u'...发生错误!发送邮件中...')
-        send_email(
-            ini.get('mail', 'host'),
-            ini.get('mail', 'account'),
-            ini.get('mail', 'passwd'),
-            ini.get('mail', 'address').split(','),
-            'ERROR:oa-spider',
-            str(e)
-        )
+        spiderloger.exception(e)
