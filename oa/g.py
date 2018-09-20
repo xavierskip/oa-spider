@@ -30,5 +30,5 @@ CONFIG = {
     'INI': os.path.join(HERE, os.pardir, 'oa.ini'),
     'INBOX_PATH': os.path.join(HERE, os.pardir, 'inbox'),
     'LOG_FILE': os.path.join(HERE, os.pardir, 'spider.log'),
-    'MAILFILE': os.path.join(HERE, os.pardir, 'notification.html'),
+    # 'MAILFILE': os.path.join(HERE, os.pardir, 'notification.html'),
 }
