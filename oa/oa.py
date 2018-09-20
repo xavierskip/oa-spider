@@ -169,8 +169,8 @@ class Spider(object):
         logger.info(d)
 
     @need_auth
-    def do(self,todo=1):
-        documents = self.todo(todo)
+    def do(self, unread=1, *args, **kwargs):
+        documents = self.todo(unread, *args, **kwargs)
         for doc_data in documents:
             self.save_doc(doc_data)
         self.downloadfile_info(len(documents))
@@ -215,7 +215,8 @@ class HBCDC(Spider):
             'start': start,
             'limit': limit,
         }
-        return self.session.post(query_url, data=payload)
+        r = self.session.post(query_url, data=payload)
+        return r.json()
 
     def doc_parser(self, doc_id):
         read = self.session.post(self.FRec_URL, data={'id': doc_id}).json()['data']
@@ -275,24 +276,24 @@ class HBCDC(Spider):
             'files': [(fileURL, filename)],  # something trouble
         }
 
-    def todo(self, unread=1):
+    def todo(self, unread=1, *args, **kwargs):
         documents = []
-        index = self.doc_query()
-        for doc in index.json()['data']:
-            if doc['ReadStatus'] == 0:
-                if doc['Type'] == u'文件':
-                    doc_data = self.doc_parser(doc['Id'])
-                    documents.append(doc_data)
-                elif doc['Type'] == u'邮件':
-                    doc_data = self.mail_parser(doc['Id'])
-                    documents.append(doc_data)
-                elif doc['Type'] == u'公文':
-                    doc_data = self.official_parser(doc['Id'])
-                    documents.append(doc_data)
-                else:
-                    logger.info(u'miss type %s\n%s' %(doc['Type'], doc))
-            # else:
-                # pass
+        docs = self.doc_query(**kwargs)['data']
+        if unread:  # filter received documents
+            f = lambda x: x['ReadStatus'] == '0'
+            docs = filter(f, docs)
+        for doc in docs:
+            if doc['Type'] == u'文件':
+                doc_data = self.doc_parser(doc['Id'])
+                documents.append(doc_data)
+            elif doc['Type'] == u'邮件':
+                doc_data = self.mail_parser(doc['Id'])
+                documents.append(doc_data)
+            elif doc['Type'] == u'公文':
+                doc_data = self.official_parser(doc['Id'])
+                documents.append(doc_data)
+            else:
+                logger.warning(u'miss type %s\n%s' %(doc['Type'], doc))
         return documents
 
     # ABANDON!
