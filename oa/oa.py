@@ -7,17 +7,12 @@ import time
 import errno
 import re
 import StringIO
+from g import FILENAMES, CONFIG
+from logger import spiderloger as logger
 from pyquery import PyQuery
 from lxml import etree
-from requests.exceptions import ConnectionError
 from PIL import Image
-from g import FILENAMES, CONFIG
-from mylog import spiderlog as logger
 from captcha import hack_captcha
-
-
-class LoginFailError(Exception):
-    pass
 
 def guess_abstract(string, len=36):
     # gs = re.finditer(u'[\u4E00-\u9FA5]', string)
