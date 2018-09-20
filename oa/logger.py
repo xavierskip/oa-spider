@@ -12,6 +12,14 @@ class MyFormatter(logging.Formatter):
     logger.error 详细记录
     logger.info  记录时间及信息
     logger.debug 记录信息
+
+    Level   Numeric value
+    CRITICAL    50
+    ERROR   40
+    WARNING 30
+    INFO    20
+    DEBUG   10
+    NOTSET  0
     """
 
     err_fmt = "[%(levelname)s] File \"%(pathname)s\", line %(lineno)d, in %(funcName)s\n%(msg)s"
@@ -41,7 +49,20 @@ class MyFormatter(logging.Formatter):
 
         return result
 
+# http://ju.outofmemory.cn/entry/85917
+# sh.setFormatter(EncodingFormatter('%(message)s', encoding='utf-8'))
+class EncodingFormatter(logging.Formatter):
+    def __init__(self, fmt, datefmt=None, encoding=None):
+        logging.Formatter.__init__(self, fmt, datefmt)
+        self.encoding = encoding
+    def format(self, record):
+        result = logging.Formatter.format(self, record)
+        if isinstance(result, unicode):
+            result = result.encode(self.encoding or 'utf-8')
+        return result
+
 fmt = MyFormatter()
+utf8fmt = EncodingFormatter('%(message)s', encoding='utf-8')
 
 spiderloger = logging.getLogger('oa')
 spiderloger.setLevel(logging.DEBUG)
@@ -70,6 +91,7 @@ def logger_configure(ini):
         credentials=(ini.get('mail', 'account'), ini.get('mail', 'passwd')),
         )
     smtp.setLevel(logging.WARNING)
+    smtp.setFormatter(utf8fmt)
     spiderloger.addHandler(smtp)
 
     #mailoger
@@ -81,6 +103,7 @@ def logger_configure(ini):
         credentials=(ini.get('mail', 'account'), ini.get('mail', 'passwd')),
         )
     mail.setLevel(logging.INFO)
+    mail.setFormatter(utf8fmt)
     mailoger.addHandler(mail)
 
     

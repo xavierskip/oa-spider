@@ -28,7 +28,7 @@ def get_mail_digest():
             p = '<p>%s</p>' % d['note'] if d['note'] else ''
             li += '<li><b>%s</b>%s%s</li>' % (d['title'], p, ul)
         html += '<h2>[%s]</h2><ol>%s</ol>' % (name, li)  # file titles is unicode
-    return html
+    return html#.encode('utf-8') # output is utf-8 to send email
 
 
 def _format_addr(s):
