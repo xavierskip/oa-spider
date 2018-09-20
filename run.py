@@ -28,6 +28,7 @@ def main(ini):
         try:
             u, p = ini.get('hbcdc', 'user'), ini.get('hbcdc', 'passwd')
             hbcdc = HBCDC(u, p)
+            # hbcdc.do(unread=0, limit=2)
             hbcdc.do()
         except (ReadTimeout, ConnectionError) as e:
             spiderloger.error(e, exc_info=True)
@@ -69,7 +70,7 @@ if __name__ == '__main__':
                         f.write(digest)
                     time.sleep(1)  # wait and try send mail again
         else:
-            # no unreader documents
+            # no unread documents
             pass
     except Exception as e:
         spiderloger.exception(e)

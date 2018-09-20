@@ -1,10 +1,52 @@
 #!/usr/bin/env python
 # coding: utf-8
+
+import os
 from g import CONFIG
 import logging
-import logging.handlers
-import os
+from logging.handlers import SMTPHandler
 
+
+class mimetypeSMTPHandler(SMTPHandler):
+    def set_mimetype(self, mimetype):
+        self.mimetype = mimetype
+
+    def emit(self, record):
+        """
+        Emit a record.
+        Format the record and send it to the specified addressees.
+        """
+        try:
+            import smtplib
+            from email.header import Header
+            from email.utils import formatdate
+            from email.mime.text import MIMEText
+            port = self.mailport
+            if not port:
+                port = smtplib.SMTP_PORT
+            try:
+                minetype = self.mimetype
+            except AttributeError:
+                minetype = 'plain'
+            smtp = smtplib.SMTP(self.mailhost, port, timeout=self._timeout)
+            msg = self.format(record)
+            msg = MIMEText(msg, minetype, 'utf-8')
+            msg['Subject'] = Header(self.getSubject(record), 'utf-8')
+            msg['From'] = self.fromaddr
+            msg['To'] = ','.join(self.toaddrs)
+            msg['Date'] = formatdate()
+            if self.username:
+                if self.secure is not None:
+                    smtp.ehlo()
+                    smtp.starttls(*self.secure)
+                    smtp.ehlo()
+                smtp.login(self.username, self.password)
+            smtp.sendmail(self.fromaddr, self.toaddrs, msg.as_string())
+            smtp.quit()
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
 
 # http://stackoverflow.com/a/8349076/1265727
 class MyFormatter(logging.Formatter):
@@ -83,7 +125,7 @@ def logger_configure(ini):
         fh.setFormatter(fmt)
         spiderloger.addHandler(fh)
 
-    smtp = logging.handlers.SMTPHandler(
+    smtp = mimetypeSMTPHandler(
         ini.get('mail', 'host'),
         ini.get('mail', 'account'),
         ini.get('mail', 'address').split(','),
@@ -92,10 +134,11 @@ def logger_configure(ini):
         )
     smtp.setLevel(logging.WARNING)
     smtp.setFormatter(utf8fmt)
+    smtp.set_mimetype('html')
     spiderloger.addHandler(smtp)
 
     #mailoger
-    mail = logging.handlers.SMTPHandler(
+    mail = mimetypeSMTPHandler(
         ini.get('mail', 'host'),
         ini.get('mail', 'account'),
         ini.get('mail', 'address').split(','),
@@ -104,6 +147,7 @@ def logger_configure(ini):
         )
     mail.setLevel(logging.INFO)
     mail.setFormatter(utf8fmt)
+    mail.set_mimetype('html')
     mailoger.addHandler(mail)
 
     
