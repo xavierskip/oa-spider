@@ -279,8 +279,9 @@ class HBCDC(Spider):
     def todo(self, unread=1, *args, **kwargs):
         documents = []
         docs = self.doc_query(**kwargs)['data']
+        print(docs)
         if unread:  # filter received documents
-            f = lambda x: x['ReadStatus'] == '0'
+            f = lambda x: x['ReadStatus'] == 0
             docs = filter(f, docs)
         for doc in docs:
             if doc['Type'] == u'文件':
