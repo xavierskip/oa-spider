@@ -4,7 +4,7 @@
 import os
 from g import CONFIG
 import logging
-from logging.handlers import SMTPHandler
+from logging.handlers import SMTPHandler, TimedRotatingFileHandler
 
 
 class mimetypeSMTPHandler(SMTPHandler):
@@ -120,7 +120,8 @@ def logger_configure(ini):
     spiderloger.addHandler(sh)
 
     if os.getenv('oa_spider') != 'debug':
-        fh = logging.FileHandler(CONFIG['LOG_FILE'], encoding='utf-8')
+        fh = TimedRotatingFileHandler(CONFIG['LOG_FILE'],
+            when='D', interval=30, encoding='utf-8')
         sh.setLevel(logging.INFO)
         fh.setFormatter(fmt)
         spiderloger.addHandler(fh)
