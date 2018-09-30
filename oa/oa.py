@@ -621,6 +621,14 @@ class JZWJW_NEW(Spider):
         r = self.session.post(url, data=payload)
         return r.json()
 
+    def read_confirm(id):
+        url = '%s/oa/sendDocumentUser/view' % self.ORIGIN
+        payload = {
+            'id': id
+        }
+        r = self.session.get(url, params=payload)
+        return r
+
     def get_attachment_json(self, documentId):
         url = '%s/oa/document/file/list' % self.ORIGIN
         payload = {
@@ -656,5 +664,7 @@ class JZWJW_NEW(Spider):
                 url, name = self.document_download_URL(i['id']), i['fileName']
                 doc_data['files'].append((url, name))
             documents.append(doc_data)
+            # read confirm
+            read_confirm(doc['id'])
 
         return documents
