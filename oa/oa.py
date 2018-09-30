@@ -665,6 +665,6 @@ class JZWJW_NEW(Spider):
                 doc_data['files'].append((url, name))
             documents.append(doc_data)
             # read confirm
-            read_confirm(doc['id'])
+            self.read_confirm(doc['id'])
 
         return documents
