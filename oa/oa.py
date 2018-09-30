@@ -621,7 +621,7 @@ class JZWJW_NEW(Spider):
         r = self.session.post(url, data=payload)
         return r.json()
 
-    def read_confirm(id):
+    def read_confirm(self, id):
         url = '%s/oa/sendDocumentUser/view' % self.ORIGIN
         payload = {
             'id': id
