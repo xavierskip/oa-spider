@@ -13,6 +13,7 @@ from pyquery import PyQuery
 from lxml import etree
 from PIL import Image
 from captcha import hack_captcha
+from exceptions import LoginFailError
 
 def guess_abstract(string, len=36):
     # gs = re.finditer(u'[\u4E00-\u9FA5]', string)
