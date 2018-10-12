@@ -261,7 +261,7 @@ class HBCDC(Spider):
             'Mode': 'Print',
             'WorkItemID': Id
         }
-        headers = {'Accept-Language': 'zh-CN'} # i don't know why should add this request header
+        headers = {'Accept-Language': 'zh-CN'}  #I don't know why should add this request header
         r = self.session.get(url, params=payload, headers=headers)
         official_content = PyQuery(r.text)
         ele_title = official_content('#ctrlTitle')
@@ -271,11 +271,21 @@ class HBCDC(Spider):
         att_r = self.session.post(att_url, data={'id': att_id})
         filename = att_r.json()['data']['FileName']
         fileURL = '%s?id=%s' % (self.DOWNLOAD_URL, att_id)
+        # read confirm
+        self.official_read_confirm(Id)
         return {
-            'title': ele_title.text(),
+            'title': u'【公文处理】'+ele_title.text(),
             'note': r.text,
             'files': [(fileURL, filename)],  # something trouble
         }
+
+    def official_read_confirm(self, Id):
+        url = 'http://oa.hbcdc.com/FlowPortal/WorkItemDetail.aspx'
+        payload = {
+            'WorkItemID': Id
+        }
+        headers = {'Accept-Language': 'zh-CN'}  #Special header
+        return self.session.get(url, params=payload, headers=headers, allow_redirects=False)
 
     def todo(self, unread=1, *args, **kwargs):
         documents = []
