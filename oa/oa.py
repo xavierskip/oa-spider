@@ -174,7 +174,8 @@ class Spider(object):
         documents = self.todo(unread, *args, **kwargs)
         for doc_data in documents:
             self.save_doc(doc_data)
-        self.downloadfile_info(len(documents))
+
+        self.downloadfile_info(len(documents))  # just show the info 
 
 
 class HBCDC(Spider):
@@ -243,10 +244,14 @@ class HBCDC(Spider):
         mail_detail = self.session.get(self.MailDetail_URL, params={'mailBoxId': mail_box_id})
         mail_content = PyQuery(mail_detail.text)
         tds = mail_content('tr td')
-        if len(tds) != 6:
-            logger.error('mailBoxId:%s\n%s\n' %(mail_box_id, mail_detail.text))
-            raise ValueError
-        topic, date, sender, addr, att, content = mail_content('tr td')
+        # if len(tds) != 6:
+        #     logger.error('mailBoxId:%s\n%s\n' %(mail_box_id, mail_detail.text))
+        #     raise ValueError
+        (topic, date, sender, addr, att, content), rest = tds[:6], tds[6:]
+        if rest:
+            att = content 
+            content = rest[0]
+            logger.info('mailBoxId:%s\n%s' %(mail_box_id, mail_detail.text))
         ids_names = [(re.search('Id:\'(.+)\'', d.find('a').get('onclick')).group(1), d.find('a').text) for d in att]
         note = content.text if type(content) == etree._Element else content.text_content()
         return {
