@@ -15,7 +15,7 @@ from PIL import Image
 from captcha import hack_captcha
 from exceptions import LoginFailError
 
-__timeout = 10
+TIMEOUT = 10
 
 def guess_abstract(string, len=36):
     # gs = re.finditer(u'[\u4E00-\u9FA5]', string)
@@ -196,7 +196,7 @@ class HBCDC(Spider):
             'username': username,
             'password': password,
         }
-        r = self.session.post(self.LOGIN_URL, data=payload, timeout=__timeout)
+        r = self.session.post(self.LOGIN_URL, data=payload, timeout=TIMEOUT)
         if r.json()['success']:
             return True
         else:
@@ -355,7 +355,7 @@ class HBWJW(Spider):
             'xingming': username.decode('utf-8').encode('gbk'),
             'mima': password,
         }
-        r = self.session.post(self.LOGIN_URL, data=payload, allow_redirects=False, timeout=__timeout)
+        r = self.session.post(self.LOGIN_URL, data=payload, allow_redirects=False, timeout=TIMEOUT)
         if r.status_code == 302 and r.headers['location'] == 'index.php3?url=&menuid=':
             return True
         else:
@@ -500,7 +500,7 @@ class JZWJW(Spider):  # abandoned!
 
     def get_captcha_img(self):
         url = '%s/oa/login/image.jsp' % self.ORIGIN
-        r = self.session.get(url, timeout=__timeout)
+        r = self.session.get(url, timeout=TIMEOUT)
         # with open('captcha.jpg', 'wb') as jpg:
         #     jpg.write(r.content)
         return Image.open(StringIO.StringIO(r.content))
@@ -517,7 +517,7 @@ class JZWJW(Spider):  # abandoned!
             'input': self.captcha_code,
             'ip': '61.184.206.86'
         }
-        r = self.session.post(self.LOGIN_URL, data=payload, allow_redirects=False, timeout=__timeout)
+        r = self.session.post(self.LOGIN_URL, data=payload, allow_redirects=False, timeout=TIMEOUT)
         if r.headers['location'] == headerl:
             return True
         else:
@@ -625,7 +625,7 @@ class JZWJW_NEW(Spider):
             'userName': username,
             'password': password
         }
-        r = self.session.post(self.LOGIN_URL, data=payload, timeout=__timeout)
+        r = self.session.post(self.LOGIN_URL, data=payload, timeout=TIMEOUT)
         rs = r.json()
         return rs['result']
 
