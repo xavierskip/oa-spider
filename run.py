@@ -37,16 +37,22 @@ def main(ini):
             pass
 
     if ini.has_option('hbwjw', 'user'):
-        try:
-            u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
-            hbwjw = HBWJW(u, p)
-            hbwjw.do()
-        except (ReadTimeout, ConnectionError) as e:
-            if check_hbwjw_vpn():
-                spiderloger.info(u"check the VPN.")
-            spiderloger.error(e, exc_info=True)
-        except LoginFailError:
-            pass
+        for _ in range(3):
+            try:
+                u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
+                hbwjw = HBWJW(u, p)
+                hbwjw.do()
+                break
+            except (ReadTimeout, ConnectionError) as e:
+                if check_hbwjw_vpn():
+                    spiderloger.info(u"VPN try again.")
+                    time.sleep(60)
+                    continue
+                spiderloger.error(e, exc_info=True)
+                break
+            except LoginFailError:
+                spiderloger.info(u"Login Fail Error.")
+                break
 
     digest = get_mail_digest()
     return digest
