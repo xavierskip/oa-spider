@@ -101,6 +101,9 @@ class EncodingFormatter(logging.Formatter):
         result = logging.Formatter.format(self, record)
         if isinstance(result, unicode):
             result = result.encode(self.encoding or 'utf-8')
+        # for send mail
+        if record.levelno >= logging.ERROR:
+            result = "<pre>%s</pre>" %result
         return result
 
 fmt = MyFormatter()
