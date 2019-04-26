@@ -45,11 +45,12 @@ def main(ini):
                 break
             except (ReadTimeout, ConnectionError) as e:
                 if check_hbwjw_vpn():
-                    spiderloger.info(u"VPN try again.")
+                    spiderloger.info("%s try again." %_)
                     time.sleep(60)
                     continue
-                spiderloger.error(e, exc_info=True)
-                break
+                else:
+                    spiderloger.error("VPN disconnect.", exc_info=True)
+                    break
             except LoginFailError:
                 spiderloger.info(u"Login Fail Error.")
                 break
