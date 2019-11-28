@@ -106,6 +106,9 @@ class Spider(object):
         return getattr(self, "NAME", None) or type(self).__name__
 
     def login(self, u, p):
+        '''
+        in this funciton,http request need timeout
+        '''
         return True
 
     def downloadfile_info(self, count):
@@ -351,7 +354,11 @@ class HBWJW(Spider):
     LOGIN_URL = 'http://192.168.20.190/logined.php3'
 
     def login(self, username, password):
+        r = self.session.get('http://192.168.20.190/login.php3', timeout=TIMEOUT)
+        page = PyQuery(r.content.decode('gbk'))
+        token = page('input[type="hidden"]').attr('value')
         payload = {
+            'token': token,
             'xingming': username.decode('utf-8').encode('gbk'),
             'mima': password,
         }
@@ -492,7 +499,7 @@ class HBWJW(Spider):
         self.newdoc_logit(len(links))
 
 
-#ABANDON!
+''' ABANDON!
 class JZWJW(Spider):  # abandoned!
     NAME = u'荆州市卫计委'
     ORIGIN = 'http://219.140.163.109:9090'
@@ -613,7 +620,7 @@ class JZWJW(Spider):  # abandoned!
     @need_auth
     def test_decorator(self, a='test'):
         print(a, 'Decorator test!!!')
-
+'''
 
 class JZWJW_NEW(Spider):
     NAME = u'荆州市卫计委'
