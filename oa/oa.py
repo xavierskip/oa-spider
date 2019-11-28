@@ -499,7 +499,7 @@ class HBWJW(Spider):
         self.newdoc_logit(len(links))
 
 
-''' ABANDON!
+''' ABANDON!!!
 class JZWJW(Spider):
     NAME = u'荆州市卫计委'
     ORIGIN = 'http://219.140.163.109:9090'
