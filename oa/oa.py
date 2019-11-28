@@ -500,7 +500,7 @@ class HBWJW(Spider):
 
 
 ''' ABANDON!
-class JZWJW(Spider):  # abandoned!
+class JZWJW(Spider):
     NAME = u'荆州市卫计委'
     ORIGIN = 'http://219.140.163.109:9090'
     LOGIN_URL = '%s/oa/function/org/login.action' % ORIGIN
