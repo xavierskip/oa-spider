@@ -431,7 +431,7 @@ class HBWJW(Spider):
     def mail_parser(self, url):
         r = self.session.get(url)
         pq = PyQuery(r.content.decode('gbk'))
-        table = pq.children('div > table')
+        table = pq('div > table')
         title = table(
             'tr:nth-child(2) > td > div > table > tr:nth-child(1) > td > table > tr:nth-child(2) > td > div > table  > tr:nth-child(4) > td:nth-child(2)')
         note = table(
