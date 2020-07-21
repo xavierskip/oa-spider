@@ -252,7 +252,11 @@ class HBCDC(Spider):
         # if len(tds) != 6:
         #     logger.error('mailBoxId:%s\n%s\n' %(mail_box_id, mail_detail.text))
         #     raise ValueError
-        (topic, date, sender, addr, att, content), rest = tds[:6], tds[6:]
+        try:
+            (topic, date, sender, addr, att, content), rest = tds[:6], tds[6:]
+        except ValueError as e:
+            logger.error(e, type(tds), len(tds), tds.text)
+        
         if rest:
             att = content 
             content = rest[0]
