@@ -175,7 +175,7 @@ class Spider(object):
         logger.info(d)
 
     @need_auth
-    def do(self, unread=1, *args, **kwargs):
+    def do(self, unread=True, *args, **kwargs):
         documents = self.todo(unread, *args, **kwargs)
         for doc_data in documents:
             self.save_doc(doc_data)
@@ -301,7 +301,7 @@ class HBCDC(Spider):
         headers = {'Accept-Language': 'zh-CN'}  #Special header
         return self.session.get(url, params=payload, headers=headers, allow_redirects=False)
 
-    def todo(self, unread=1, *args, **kwargs):
+    def todo(self, unread=True, *args, **kwargs):
         documents = []
         docs = self.doc_query(**kwargs)['data']
         if unread:  # filter received documents
@@ -451,7 +451,7 @@ class HBWJW(Spider):
             ],
         }
 
-    def todo(self, unread=1):
+    def todo(self, unread=True):
         documents = []
         url_list = []
         news_pq = PyQuery(self.get_new_docs().content.decode('gbk'))
@@ -672,17 +672,19 @@ class JZWJW_NEW(Spider):
     def document_download_URL(self, id):
         return "%s/oa/document/file/download/%s" %(self.ORIGIN, id)
 
-    def todo(self, unread=1):
+    def todo(self, unread=True, index=None):
         documents = []
         docs = self.get_documents_json()['rows']
         if unread:  # filter received documents
             f = lambda x: x['isReceived'] != '2'
             docs = filter(f, docs)
+        if index != None:
+            docs = [docs[int(index)]]
         for doc in docs:
             doc_dict = doc['sendDocument']
             doc_data = {
                 'title': doc_dict['title'],
-                'note': doc_dict['content'],  # unknow
+                'note': doc['remarks'],  # unknow
                 'files': [],
             }
             # sendDocument file

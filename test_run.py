@@ -30,9 +30,11 @@ class OAtest(unittest.TestCase):
     #     jzwjw.save_doc(data)
 
     def test_newjzwjw(self):
-        pass
+        jzwjw = JZWJW_NEW(INI.get('jzwjw', 'user'), INI.get('jzwjw', 'passwd'))
+        jzwjw.do(unread=0, index=0)
+        # jzwjw.todo()
 
-    def test_hbcdc(self):
+    def _test_hbcdc(self):
         hbcdc_data = {
             'title': 'test-hbcdc',
             'note': '',
@@ -56,8 +58,9 @@ class OAtest(unittest.TestCase):
 
         data = hbcdc.mail_parser('3ca1e4d5-68b9-49c1-8197-6a4e8b279e83')
         hbcdc.save_doc(data)
+
     
-    def test_hbwjw(self):
+    def _test_hbwjw(self):
         hbwjw_data = {
             'title': 'test-hbwjw',
             'note': '',
@@ -85,20 +88,20 @@ class OAtest(unittest.TestCase):
         else:
             print("VPN not ready.")
         
-    def test_gethbcdcMail(self):
+    def _test_gethbcdcMail(self):
         """
         hbcdc get a mail
         """
         u, p = INI.get('hbcdc', 'user'), INI.get('hbcdc', 'passwd')
         hbcdc = HBCDC(u, p)
         ids = ['bf872eac-54f4-4ced-9236-6fa1f3d2d202',
-        'de3cd6a9-c480-4888-b636-afd9c46ea67f',
-        '483658f1-9716-42f9-9f42-56c7c0e94651']
+        '91f6cad4-600e-4116-98d0-12a385e1a197',
+        ]
         data = [hbcdc.mail_parser(id) for id in ids]
         for d in data:
             hbcdc.save_doc(d)
         
-    def test_logger(self):
+    def _test_logger(self):
         html_content = '''
         <h1>it's a</h1>
         <p>mail test</p>
