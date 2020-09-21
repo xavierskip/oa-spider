@@ -182,6 +182,10 @@ class Spider(object):
 
         self.downloadfile_info(len(documents))  # just show the info 
 
+    @need_auth
+    def todo(self, *args, **kwargs):
+        pass
+
 
 class HBCDC(Spider):
     NAME = u'湖北省疾控中心'
@@ -337,19 +341,19 @@ class HBCDC(Spider):
         }
         return self.session.post(todo_url, data=payload)
 
-    def __todo(self):  
-        todo = self.todo_query()
-        todo_page = PyQuery(todo.text)
-        i = 0  # when for loop is empty for the logger.info()
-        for i, ele in enumerate(todo_page('a').items(), 1):
-            if CONFIG['DEBUG']:
-                print(ele.text())
-            else:
-                doc_id = ele.attr.onclick.split('\'')[1]
-                data = self.doc_parser(doc_id)
-                self.save_doc(data)
+    # def __todo(self):  
+    #     todo = self.todo_query()
+    #     todo_page = PyQuery(todo.text)
+    #     i = 0  # when for loop is empty for the logger.info()
+    #     for i, ele in enumerate(todo_page('a').items(), 1):
+    #         if CONFIG['DEBUG']:
+    #             print(ele.text())
+    #         else:
+    #             doc_id = ele.attr.onclick.split('\'')[1]
+    #             data = self.doc_parser(doc_id)
+    #             self.save_doc(data)
 
-        self.newdoc_logit(i)
+    #     self.newdoc_logit(i)
 
 
 class HBWJW(Spider):
@@ -479,28 +483,28 @@ class HBWJW(Spider):
         return documents
 
     # ABANDON!
-    def test(self, page=1):
-        links = self.fetch_mail_urls(page)
-        for url, name in links:
-            if CONFIG['DEBUG']:
-                print(url, name)
-            else:
-                data = self.mail_parser(url)
-                self.save_doc(data)
+    # def test(self, page=1):
+    #     links = self.fetch_mail_urls(page)
+    #     for url, name in links:
+    #         if CONFIG['DEBUG']:
+    #             print(url, name)
+    #         else:
+    #             data = self.mail_parser(url)
+    #             self.save_doc(data)
 
-        self.newdoc_logit(len(links))
+    #     self.newdoc_logit(len(links))
 
-    @need_auth
-    def __todo(self, page=1): 
-        links = self.fetch_todo_mail_urls(page)
-        for url, name in links:
-            if CONFIG['DEBUG']:
-                print(url, name)
-            else:
-                data = self.mail_parser(url)
-                self.save_doc(data)
+    # @need_auth
+    # def __todo(self, page=1): 
+    #     links = self.fetch_todo_mail_urls(page)
+    #     for url, name in links:
+    #         if CONFIG['DEBUG']:
+    #             print(url, name)
+    #         else:
+    #             data = self.mail_parser(url)
+    #             self.save_doc(data)
 
-        self.newdoc_logit(len(links))
+    #     self.newdoc_logit(len(links))
 
 
 ''' ABANDON!!!
