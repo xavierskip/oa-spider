@@ -137,9 +137,10 @@ class Spider(object):
         title = data['title'].strip()
         path = mkdir_p(clean_filename(title))
         logger.info(u' → {}'.format(title))
-        if data['note']:
-            self.write_note(data['note'], path)
-            logger.debug(u'通知: %s' % guess_abstract(data['note']))
+        note = data['note'].strip()
+        if note:
+            self.write_note(note, path)
+            logger.debug(u'通知: %s' % guess_abstract(note))
         for i, (url, name) in enumerate(data['files'], 1):
             self.download_file(url, name, path, '(%s/%s)' % (i, len(data['files'])))
 
