@@ -137,7 +137,9 @@ class Spider(object):
         title = data['title'].strip()
         path = mkdir_p(clean_filename(title))
         logger.info(u' → {}'.format(title))
-        note = data['note'].strip()
+        note = data['note']
+        if isinstance(note, basestring):
+           note = note.strip()
         if note:
             self.write_note(note, path)
             logger.debug(u'通知: %s' % guess_abstract(note))
@@ -361,11 +363,11 @@ class HBWJW(Spider):
     NAME = u'湖北省卫计委'
     ORIGIN = 'http://192.168.20.190'
     LOGIN_URL = 'http://192.168.20.190/logined.php3'
+    TOKEN_PAGE = 'http://192.168.20.190/getToken.php'
 
     def login(self, username, password):
-        r = self.session.get('http://192.168.20.190/login.php3', timeout=TIMEOUT)
-        page = PyQuery(r.content.decode('gbk'))
-        token = page('input[type="hidden"]').attr('value')
+        r = self.session.post(self.TOKEN_PAGE, timeout=TIMEOUT)
+        token = r.json()["token"]
         payload = {
             'token': token,
             'xingming': username.decode('utf-8').encode('gbk'),
