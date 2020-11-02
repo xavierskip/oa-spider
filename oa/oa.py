@@ -387,8 +387,9 @@ class HBWJW(Spider):
     def to_url(self, url):
         r = self.session.get(url)
         # print(url)
-        # print(r.content)
-        return self.ORIGIN + re.findall('location=\'(.+)\'', r.content)[0]
+        # print("find location", r.content.find("window.location="))
+        location = re.findall('location=\'(.+)\'', r.content)[0]
+        return self.ORIGIN + location
 
     def card_show(self, url):
         """ js window.location """
@@ -460,17 +461,31 @@ class HBWJW(Spider):
 
     def todo(self, unread=True):
         documents = []
+        tmp_path = []
         url_list = []
         news_pq = PyQuery(self.get_new_docs().content.decode('gbk'))
         mails_pq = PyQuery(self.get_new_mails().content.decode('gbk'))
 
         for ele in news_pq('.ul1 li').items():
             # name = e.children().attr['title']
-            url_list.append(self.card_show(self.ORIGIN + ele('a').attr['href']))
+            # url_list.append(self.card_show(self.ORIGIN + ele('a').attr['href']))
+            tmp_path.append(ele('a').attr['href'])
 
         for ele in mails_pq('.ul1 li').items():
             # name = e.children().attr['title']
-            url_list.append(self.to_url(self.ORIGIN + ele('a').attr['href']))
+            # url_list.append(self.to_url(self.ORIGIN + ele('a').attr['href']))
+            tmp_path.append(ele('a').attr['href'])
+
+        for p in tmp_path:
+            if p.find("action.php3?") != -1:
+                url_list.append(self.card_show(self.ORIGIN + p))
+                continue
+            elif p.find("tourl.php?") != -1:
+                url_list.append(self.to_url(self.ORIGIN + p))
+            else:
+                logger.error('%s unknow path: %s' %(self, p))
+        
+        # print(url_list)
 
         for url in url_list:
             if url.find('/cards/action/cardshow.php3') != -1:
