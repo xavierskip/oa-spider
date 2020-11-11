@@ -3,3 +3,6 @@
 
 class LoginFailError(Exception):
     pass
+
+class VPNdisconnect(Exception):
+    pass

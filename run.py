@@ -3,13 +3,58 @@
 import os
 import time
 from oa import JZWJW_NEW, HBCDC, HBWJW, OAini
-from oa.exceptions import LoginFailError
+from oa.exceptions import LoginFailError, VPNdisconnect
 from oa.logger import spiderloger, mailoger
 from oa.notification import get_mail_digest
 from oa.network import check_hbwjw_vpn
 from requests.exceptions import ReadTimeout, ConnectionError
 from smtplib import SMTPException
 
+def tryandtry(trytimes, sleeptime=10):
+    def _try(func):
+        def wrapper(*args, **kwargs):
+            # default TIMEOUT = 10
+            # loop time interval 
+            # 1 sleep
+            # 2 TIMEOUT + sleeptime
+            # 3 TIMEOUT + sleeptime
+            # ....
+            for _ in range(trytimes):
+                try:
+                    func(*args, **kwargs)
+                    break
+                except (ReadTimeout, ConnectionError) as e:
+                    if _+1 == trytimes:
+                        spiderloger.error(e, exc_info=True)
+                        break
+                    else:
+                        spiderloger.info("%d %s try fail" %(_+1, func))
+                        time.sleep(sleeptime)
+                        continue
+                except VPNdisconnect:
+                    spiderloger.error("VPN disconnect.", exc_info=True)
+                    break
+                except LoginFailError:
+                    # loginfail logging in oa.py
+                    break
+        return wrapper
+    return _try
+
+@tryandtry(3)
+def hbcdcdo(ini):
+    u, p = ini.get('hbcdc', 'user'), ini.get('hbcdc', 'passwd')
+    hbcdc = HBCDC(u, p)
+    # hbcdc.do(unread=0, limit=2)
+    hbcdc.do()
+
+@tryandtry(3, 30)
+def hbwjwdo(ini):
+    if check_hbwjw_vpn():
+        u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
+        hbwjw = HBWJW(u, p)
+        hbwjw.do()
+    else:
+        raise VPNdisconnect
 
 def main(ini):
     """
@@ -26,34 +71,10 @@ def main(ini):
             pass
     
     if ini.has_option('hbcdc', 'user'):
-        try:
-            u, p = ini.get('hbcdc', 'user'), ini.get('hbcdc', 'passwd')
-            hbcdc = HBCDC(u, p)
-            # hbcdc.do(unread=0, limit=2)
-            hbcdc.do()
-        except (ReadTimeout, ConnectionError) as e:
-            spiderloger.error(e, exc_info=True)
-        except LoginFailError:
-            pass
+        hbcdcdo(ini)
 
     if ini.has_option('hbwjw', 'user'):
-        for _ in range(3):
-            try:
-                u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
-                hbwjw = HBWJW(u, p)
-                hbwjw.do()
-                break
-            except (ReadTimeout, ConnectionError) as e:
-                if check_hbwjw_vpn():
-                    spiderloger.info("%s try again." %_)
-                    time.sleep(60)
-                    continue
-                else:
-                    spiderloger.error("VPN disconnect.", exc_info=True)
-                    break
-            except LoginFailError:
-                spiderloger.info(u"Login Fail Error.")
-                break
+        hbwjwdo(ini)
 
     digest = get_mail_digest()
     return digest
