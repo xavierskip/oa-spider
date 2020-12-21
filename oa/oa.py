@@ -100,7 +100,7 @@ class Spider(object):
                 logger.info(u'%s登录成功', self)
             else:
                 self.auth = False
-                logger.info(u'%s登录失败', self)
+                logger.info(u'%s登录失败!', self)
 
     def __unicode__(self):
         return getattr(self, "NAME", None) or type(self).__name__
