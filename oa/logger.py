@@ -45,8 +45,8 @@ class mimetypeSMTPHandler(SMTPHandler):
             smtp.quit()
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
-            self.handleError(record)
+        # except:
+        #     self.handleError(record)
 
 # http://stackoverflow.com/a/8349076/1265727
 class MyFormatter(logging.Formatter):

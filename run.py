@@ -8,7 +8,7 @@ from oa.logger import spiderloger, mailoger
 from oa.notification import get_mail_digest
 from oa.network import check_hbwjw_vpn
 from requests.exceptions import ReadTimeout, ConnectionError
-from smtplib import SMTPException
+from smtplib import SMTPException, SMTPAuthenticationError, SMTPServerDisconnected
 
 def tryandtry(trytimes, sleeptime=10):
     def _try(func):
@@ -87,12 +87,15 @@ if __name__ == '__main__':
             step = 0
             while step < 3:
                 try:
-                    spiderloger.debug(u'...通知中...%s...' % (step + 1))
+                    spiderloger.info(u'...发送中...%s...' % (step + 1))
                     mailoger.info(digest)
                     step = 3
-                except SMTPException as smtperr:
+                except SMTPException as err:
+                    if isinstance(err, SMTPAuthenticationError):
+                        spiderloger.info(err)
+                        break
                     step += 1
-                    spiderloger.WARNING(smtperr, exc_info=True)
+                    spiderloger.warning(err, exc_info=True)
                     # debug
                     file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mailerr.log')
                     with open(file, 'a') as f:
