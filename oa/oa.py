@@ -14,6 +14,7 @@ from lxml import etree
 from PIL import Image
 from captcha import hack_captcha
 from exceptions import LoginFailError
+from JSEncrypt import public_key, encrpt
 
 TIMEOUT = 10
 
@@ -117,9 +118,9 @@ class Spider(object):
 
     def downloadfile_info(self, count):
         if count > 0:
-            logger.info(u'%s有%d个新文件' % (self, count))
+            logger.info(u'%s有%d个新文件!' % (self, count))
         else:
-            logger.info(u'%s没有新文件' % self)
+            logger.info(u'%s没有新文件.' % self)
 
     def write_note(self, content, path):
         html = """<!DOCTYPE html><html><head><meta charset="utf-8"></head>
@@ -366,16 +367,17 @@ class HBCDC(Spider):
 class HBWJW(Spider):
     NAME = u'湖北省卫计委'
     ORIGIN = 'http://192.168.20.190'
-    LOGIN_URL = 'http://192.168.20.190/logined.php3'
+    LOGIN_URL = 'http://192.168.20.190/logined_new.php3'
     TOKEN_PAGE = 'http://192.168.20.190/getToken.php'
 
     def login(self, username, password):
         r = self.session.post(self.TOKEN_PAGE, timeout=TIMEOUT)
         token = r.json()["token"]
+        mima = encrpt(password, public_key)
         payload = {
             'token': token,
             'xingming': username.decode('utf-8').encode('gbk'),
-            'mima': password,
+            'mima': mima,
         }
         r = self.session.post(self.LOGIN_URL, data=payload, allow_redirects=False, timeout=TIMEOUT)
         if r.status_code == 302 and r.headers['location'] == 'index.php3?url=&menuid=':
