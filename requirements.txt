@@ -1,4 +1,4 @@
 requests
 Pillow
-pyquery
+pyquery==1.4.0
 pycryptodome
