@@ -76,8 +76,11 @@ def main(ini):
     if ini.has_option('hbwjw', 'user'):
         hbwjwdo(ini)
 
-    digest = get_mail_digest()
-    return digest
+    if ini.has_section('mail'):
+        digest = get_mail_digest()
+        return digest
+    else:
+        return None
 
 
 if __name__ == '__main__':
