@@ -129,6 +129,9 @@ def logger_configure(ini):
         fh.setFormatter(fmt)
         spiderloger.addHandler(fh)
 
+    if not ini.has_section('mail'):
+        return
+    # do something ready for send email
     smtp = mimetypeSMTPHandler(
         ini.get('mail', 'host'),
         ini.get('mail', 'account'),
