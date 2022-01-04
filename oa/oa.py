@@ -102,7 +102,7 @@ class Spider(object):
         if username and password:
             if self.login(username, password):
                 self.auth = True
-                logger.info(u'%s登录成功⤵️', self)
+                logger.info(u'%s登录成功✅', self)
             else:
                 self.auth = False
                 logger.info(u'%s登录失败⚠️', self)
