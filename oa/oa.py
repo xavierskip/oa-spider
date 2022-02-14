@@ -35,6 +35,8 @@ def clean_filename(name):
     http://stackoverflow.com/questions/1033424/how-to-remove-bad-path-characters-in-python
     """
     clean_chars = r'<>:"/\|?*'
+    clean_chars += "\n\r"
+    clean_chars += u"\u2028\u2029" # https://www.reddit.com/r/PowerShell/comments/f0sy6y/cleaning_data/
     for c in clean_chars:
         name = name.replace(c, '')
     while True:
@@ -44,6 +46,7 @@ def clean_filename(name):
             name = name[1:]
         else:
             break
+    # print("clear?", type(name), name)
     return name
 
 
