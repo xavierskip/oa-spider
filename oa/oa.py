@@ -36,7 +36,7 @@ def clean_filename(name):
     """
     clean_chars = r'<>:"/\|?*'
     clean_chars += "\n\r"
-    clean_chars += u"\u2028\u2029" # https://www.reddit.com/r/PowerShell/comments/f0sy6y/cleaning_data/
+    clean_chars += u"\u000A\u000B\u000C\u000D\u0085\u2028\u2029" # http://unicode.org/reports/tr18/tr18-5.1.html
     for c in clean_chars:
         name = name.replace(c, '')
     while True:
