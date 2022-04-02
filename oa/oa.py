@@ -14,6 +14,7 @@ from lxml import etree
 from PIL import Image
 from captcha import hack_captcha
 from exceptions import LoginFailError
+from requests.exceptions import ChunkedEncodingError
 from JSEncrypt import public_key, encrpt
 
 TIMEOUT = 10
@@ -152,7 +153,11 @@ class Spider(object):
             self.write_note(note, path)
             logger.debug(u'通知: %s' % guess_abstract(note))
         for i, (url, name) in enumerate(data['files'], 1):
-            self.download_file(url, name, path, '(%s/%s)' % (i, len(data['files'])))
+            try:
+                self.download_file(url, name, path, '(%s/%s)' % (i, len(data['files'])))
+            except ChunkedEncodingError as e:
+                print("NETWORK ERROR⚠️")
+                print(e)
 
     def download_file(self, url, name, path, flag='', timeout=200):
         output = StringIO.StringIO()
@@ -703,14 +708,18 @@ class JZWJW_NEW(Spider):
     def document_download_URL(self, id):
         return "%s/oa/document/file/download/%s" %(self.ORIGIN, id)
 
-    def todo(self, unread=True, index=None):
+    def todo(self, unread=True, range=None):
         documents = []
         docs = self.get_documents_json()['rows']
         if unread:  # filter received documents
             f = lambda x: x['isReceived'] != '2'
             docs = filter(f, docs)
-        if index != None:
-            docs = [docs[int(index)]]
+        if range != None:
+            if type(range) == int:
+                docs = [docs[range]]
+            if type(range) == list or type(range) == tuple:
+                s,e = range
+                docs = docs[s:e]
         for doc in docs:
             doc_dict = doc['sendDocument']
             doc_data = {
