@@ -3,7 +3,7 @@
 from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import parseaddr, formataddr
-from g import FILENAMES
+from .g import FILENAMES
 import smtplib
 import subprocess
 

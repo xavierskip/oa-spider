@@ -15,8 +15,8 @@ class Test(unittest.TestCase):
             for j, imgb in enumerate(imgs):
                 result.append([j, img_compare(imga, imgb)])
             for x,r in sorted(result, key=lambda x: x[1], reverse=True):
-                print "%s:%s %s" %(i,x,r)
-            print '='*10
+                print("%s:%s %s" %(i,x,r))
+            print('='*10)
 
     def test_continuous_lines(self):
         # s0 = []

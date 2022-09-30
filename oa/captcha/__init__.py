@@ -1,1 +1,1 @@
-from captcha import *
+from .captcha import *

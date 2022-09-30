@@ -20,8 +20,9 @@ FILENAMES = {
 
 FILENAMES = {}  # all get Files for notification
 HERE = os.path.dirname(os.path.abspath(__file__))
-fsencoding = sys.getfilesystemencoding()  #  windows xp is mbcs
-HERE = HERE.decode(fsencoding)
+# python3 do not need
+# fsencoding = sys.getfilesystemencoding()  #  windows xp is mbcs
+# HERE = HERE.decode(fsencoding)
 
 # print(HERE)
 

@@ -2,7 +2,8 @@
 # coding: utf-8
 import os
 import time
-from oa import JZWJW_NEW, HBCDC, HBWJW, OAini
+from oa import OAini
+from oa.oa import  JZWJW_NEW, HBCDC, HBWJW
 from oa.exceptions import LoginFailError, VPNdisconnect
 from oa.logger import spiderloger, mailoger
 from oa.notification import get_mail_digest

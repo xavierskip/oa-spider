@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 import requests
-import StringIO
+from io import StringIO
 from PIL import Image
 import os
 import time
@@ -69,8 +69,8 @@ def xprojection(img, box=()):
     else:
         left, upper, right, lower = box
     shadow = [0]*(right-left)
-    for x in xrange(left, right):
-        for y in xrange(upper, lower):
+    for x in range(left, right):
+        for y in range(upper, lower):
             if img.getpixel((x, y)) == BLACK:
                 shadow[x] += 1
     return shadow
@@ -87,8 +87,8 @@ def yprojection(img, box=()):
     else:
         left, upper, right, lower = box
     shadow = [0]*(lower-upper)
-    for y in xrange(upper, lower):
-        for x in xrange(left, right):
+    for y in range(upper, lower):
+        for x in range(left, right):
             if img.getpixel((x, y)) == BLACK:
                 shadow[y] += 1
     return shadow
@@ -216,9 +216,9 @@ def img2str(img):
     """
     xsize, ysize = img.size
     content = ''
-    for y in xrange(ysize):
+    for y in range(ysize):
         line = ''
-        for x in xrange(xsize):
+        for x in range(xsize):
             c = YES if img.getpixel((x, y)) == BLACK else NO
             line += c
         content += '%s\n' %line
@@ -320,14 +320,14 @@ def main():
     """ test for hack_captcha()
     """
     count = 0
-    for i in xrange(10):
+    for i in range(10):
         captcha = get_img(JZWJW_CAPTCHA_URL)
         captcha.show()
-        print hack_captcha(captcha)
-        r = raw_input('Y/N')
+        print(hack_captcha(captcha))
+        r = input('Y/N')
         if r == '\n':
             count += 1
-    print count
+    print(count)
 
 
 if __name__ == '__main__':

@@ -1,8 +1,9 @@
-from oa import *
-from logger import logger_configure
-import ConfigParser
+# from oa import *
+import configparser
 import argparse
 import os
+from .logger import logger_configure
+from .oa import CONFIG
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", help="config file",
@@ -11,18 +12,18 @@ args = parser.parse_args()
 
 
 def start_config():
-    ini = ConfigParser.ConfigParser()
+    ini = configparser.ConfigParser()
     if args.c != None:
         # print(args.c, os.path.abspath(args.c))
         ini.read(os.path.abspath(args.c))
     else:
-        ini.read(CONFIG['INI'])
+        ini.read(CONFIG['INI'], encoding='utf-8')
     overwriteconfig_4logger(ini)  # 
     return ini
 
 def overwriteconfig_4logger(ini):
     for k, v in ini.items('config'):
-        CONFIG[k.upper()] = v.decode('utf-8')
+        CONFIG[k.upper()] = v
     logger_configure(ini)
 
 OAini = start_config()

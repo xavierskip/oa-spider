@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import os
-from g import CONFIG
+from .g import CONFIG
 import logging
 from logging.handlers import SMTPHandler, TimedRotatingFileHandler
 
@@ -99,7 +99,7 @@ class EncodingFormatter(logging.Formatter):
         self.encoding = encoding
     def format(self, record):
         result = logging.Formatter.format(self, record)
-        if isinstance(result, unicode):
+        if isinstance(result, str):
             result = result.encode(self.encoding or 'utf-8')
         # for send mail
         if record.levelno >= logging.ERROR:

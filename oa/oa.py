@@ -6,16 +6,16 @@ import sys
 import time
 import errno
 import re
-import StringIO
-from g import FILENAMES, CONFIG
-from logger import spiderloger as logger
+from io import StringIO
+from .g import FILENAMES, CONFIG
+from .logger import spiderloger as logger
 from pyquery import PyQuery
 from lxml import etree
 from PIL import Image
-from captcha import hack_captcha
-from exceptions import LoginFailError
+from .captcha import hack_captcha
+from .exceptions import LoginFailError
 from requests.exceptions import ChunkedEncodingError
-from JSEncrypt import public_key, encrpt
+from .JSEncrypt import public_key, encrpt
 
 TIMEOUT = 10
 
@@ -111,7 +111,7 @@ class Spider(object):
                 self.auth = False
                 logger.info(u'%s登录失败⚠️', self)
 
-    def __unicode__(self):
+    def __str__(self):
         return getattr(self, "NAME", None) or type(self).__name__
 
     def login(self, u, p):
@@ -147,7 +147,7 @@ class Spider(object):
         path = mkdir_p(clean_filename(title))
         logger.info(u' → {}'.format(title))
         note = data['note']
-        if isinstance(note, basestring):
+        if isinstance(note, str):
            note = note.strip()
         if note:
             self.write_note(note, path)
@@ -664,7 +664,7 @@ class JZWJW(Spider):
 
 class JZWJW_NEW(Spider):
     NAME = u'荆州市卫计委'
-    ORIGIN = 'http://172.23.254.254:8888/yzoa'
+    ORIGIN = 'http://172.23.254.162:8030/yzoa/'
     LOGIN_URL = '%s/user/login' % ORIGIN
 
     def login(self, username, password):
