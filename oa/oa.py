@@ -6,7 +6,7 @@ import sys
 import time
 import errno
 import re
-from io import StringIO
+from io import BytesIO
 from .g import FILENAMES, CONFIG
 from .logger import spiderloger as logger
 from pyquery import PyQuery
@@ -160,7 +160,7 @@ class Spider(object):
                 print(e)
 
     def download_file(self, url, name, path, flag='', timeout=200):
-        output = StringIO.StringIO()
+        output = BytesIO()
         start = time.time()
         r = self.session.get(url, stream=True, timeout=timeout)
         length = int(r.headers.get('content-length', 0))
