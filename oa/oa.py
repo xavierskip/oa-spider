@@ -175,14 +175,20 @@ class Spider(object):
             t = time.time() - start
             if t != 0:
                 speed = save / t
-            if length:
+            if length:  # http header with content-length
                 size = sizeof_fmt(length)
                 rate = '{}%'.format(int(save / length * 100))
+                l = '\r{} {} {} {}/s'.format(flag, rate, size, sizeof_fmt(speed))
+                sys.stdout.write(l)
                 sys.stdout.flush()
-                sys.stdout.write('\r{} {} {} {}/s'.format(flag, rate, size, sizeof_fmt(speed)))
-            else:
+                sys.stdout.write(' '*len(l))
                 sys.stdout.flush()
-                sys.stdout.write('\r{} {} {}/s'.format(flag, sizeof_fmt(save), sizeof_fmt(speed)))
+            else:      # # http header without content-length
+                l = '\r{} {} {}/s'.format(flag, sizeof_fmt(save), sizeof_fmt(speed))
+                sys.stdout.write(l)
+                sys.stdout.flush()
+                sys.stdout.write(' '*len(l))
+                sys.stdout.flush()
 
         name = clean_filename(name)
         with open(os.path.join(path, name), 'wb') as fd:
