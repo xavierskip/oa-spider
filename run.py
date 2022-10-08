@@ -3,7 +3,7 @@
 import os
 import time
 from oa import OAini
-from oa.oa import  JZWJW_NEW, HBCDC, HBWJW
+from oa.oa import  JZWJW_NEW, HBCDC_wui, HBWJW
 from oa.exceptions import LoginFailError, VPNdisconnect
 from oa.logger import spiderloger, mailoger
 from oa.notification import get_mail_digest
@@ -44,7 +44,7 @@ def tryandtry(trytimes, sleeptime=10):
 @tryandtry(3)
 def hbcdcdo(ini):
     u, p = ini.get('hbcdc', 'user'), ini.get('hbcdc', 'passwd')
-    hbcdc = HBCDC(u, p)
+    hbcdc = HBCDC_wui(u, p)
     # hbcdc.do(unread=0, limit=2)
     hbcdc.do()
 

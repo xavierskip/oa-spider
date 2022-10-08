@@ -6,6 +6,7 @@ import sys
 import time
 import errno
 import re
+import ddddocr
 from io import BytesIO
 from .g import FILENAMES, CONFIG
 from .logger import spiderloger as logger
@@ -15,7 +16,7 @@ from PIL import Image
 from .captcha import hack_captcha
 from .exceptions import LoginFailError
 from requests.exceptions import ChunkedEncodingError
-from .JSEncrypt import public_key, encrpt
+from .JSEncrypt import hbwjw_public_key, encrpt, public_key_format
 
 TIMEOUT = 10
 
@@ -202,6 +203,138 @@ class Spider(object):
     def todo(self, *args, **kwargs):
         pass
 
+class HBCDC_wui(Spider):
+    NAME = '湖北省疾控中心'
+    SITE = 'http://10.68.0.21'
+    LOGIN_FORM    = "%s/api/hrm/login/getLoginForm" % SITE
+    WEAVER_FILE   = "%s/weaver/weaver.file.MakeValidateCode" % SITE
+    RSA_INFO      = "%s/rsa/weaver.rsa.GetRsaInfo" % SITE
+    CHECK_LOGIN   = "%s/api/hrm/login/checkLogin" % SITE
+    DOC_LIST      = "%s/api/doc/more/list" % SITE
+    TABLE_DATAS   = "%s/api/ec/dev/table/datas" % SITE
+    DOC_BASIC_INFO= "%s/api/doc/detail/basicInfo" % SITE
+    DOCACC        = "%s/api/doc/acc/docAcc" % SITE
+    DL            = "%s/weaver/weaver.file.FileDownload?fileid={}&download=1" % SITE
+
+    def validate_code(self, code):
+        '''验证码只由4个数字组成
+        '''
+        try:
+            n = int(code)
+        except ValueError:
+            return False
+        if len(code) != 4:
+            return False
+        return True
+
+    def cc(self, func, c=1, result=None):
+        ''' 不断尝试以确保得到符合的验证码，间隔时间不断增加。
+        '''
+        if c == 0:
+            return result
+        key, code = func()
+        if self.validate_code(code):
+            return self.cc(func, 0, (key, code))
+        else:
+            c += 1
+            time.sleep(c)
+            return self.cc(func, c)
+    
+    def get_code(self):
+        # get validate code key
+        r = self.session.post(self.LOGIN_FORM)
+        validateCodeKey = r.json()['loginSetting']['validateCodeKey']
+        # print(validateCodeKey)
+        # get weaver file
+        payload = {'validateCodeKey': validateCodeKey}
+        r =  self.session.get(self.WEAVER_FILE, params=payload)        
+        ocr = ddddocr.DdddOcr(show_ad=False, beta=True)
+        code = ocr.classification(r.content)
+        # print(validateCodeKey, code)
+        return (validateCodeKey, code)   
+
+    def login(self, username, password):
+        '''
+        todo: 验证码只由数字组成
+        '''
+        validateCodeKey, code = self.cc(self.get_code)
+        # GET rsa info
+        now_ts = int(time.time_ns() / 1000000)
+        payload = {'ts': now_ts}
+        r = self.session.get(self.RSA_INFO, params=payload, timeout=TIMEOUT)
+        r_json = r.json()
+        ras_code = r_json['rsa_code']
+        rsa_flag = r_json['rsa_flag']
+        rsa_pub  = public_key_format(r_json['rsa_pub'])
+        # login
+        r = self.session.post(self.CHECK_LOGIN, data={
+            'loginid': encrpt(username+ras_code, rsa_pub)+rsa_flag,
+            'userpassword': encrpt(password+ras_code, rsa_pub)+rsa_flag,
+            'validatecode': code,
+            'validateCodeKey': validateCodeKey,
+            'logintype': 1,
+            'islanguid': 7,
+            'isie': 'false'
+        }, timeout=TIMEOUT)
+        loginstatus = r.json()['loginstatus']
+        if loginstatus == 'true':
+            return True
+        else:
+            # print(r.json()) # debug
+            return False
+    
+    def get_documents(self):
+        r = self.session.post(self.DOC_LIST, data={
+            'elementmore': '{"tabtitle":"我的文件","orderby":["3","1","2"],"docCatalogIds":["98"],"order":["2","2","2"]}',
+            'isNew': 0
+        })
+        datakey = r.json()['sessionkey']
+        r = self.session.post(self.TABLE_DATAS, data={
+            'dataKey': datakey,
+            'current': 1,
+            'sortParams': []
+        })
+        docs = r.json()['datas']
+        return docs
+    
+    def get_unread_docs(self, data):
+        s = data['idspan']
+        r = re.search("src='\/images", s)
+        return bool(r)
+    
+    def get_document_files(self, docid):
+        # get doc tile
+        payload = {'docid': docid}
+        r = self.session.get(self.DOC_BASIC_INFO, params=payload)
+        title = r.json()['data']['docSubject']
+        # get doc files
+        r = self.session.get(self.DOCACC, params=payload)
+        # print(r.json())
+        datakey = r.json()['sessionkey']
+        r = self.session.post(self.TABLE_DATAS, data={
+            'dataKey': datakey,
+            'current': 1,
+            'sortParams': []
+        })
+        files = r.json()['datas']
+        # print(len(files),'file')
+        files = [(self.DL.format(f['imagefileid']), f['imagefilename']) for f in files]
+        # 
+        data = {
+            'title': title,
+            'note': '',
+            'files': files
+        }
+        return data
+
+    def todo(self, unread=True, *args, **kwargs):
+        documents = []
+        docs = self.get_documents()
+        if unread:
+            docs = filter(self.get_unread_docs,docs)
+        
+        documents = [self.get_document_files(d['id']) for d in docs]
+        return documents
 
 class HBCDC(Spider):
     NAME = u'湖北省疾控中心'
@@ -381,7 +514,7 @@ class HBWJW(Spider):
     def login(self, username, password):
         r = self.session.post(self.TOKEN_PAGE, timeout=TIMEOUT)
         token = r.json()["token"]
-        mima = encrpt(password, public_key)
+        mima = encrpt(password, hbwjw_public_key)
         payload = {
             'token': token,
             'xingming': username.decode('utf-8').encode('gbk'),

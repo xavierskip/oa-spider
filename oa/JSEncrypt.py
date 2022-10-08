@@ -6,7 +6,11 @@ from Crypto.PublicKey import RSA
 # https://github.com/Legrandin/pycryptodome
 
 key = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDWtsQ5yzNpsysN8z/UOJu8JBVFWBH3UUHslkpk33dVKF2IAtcfp6DvwYyQkLl33ttJYAWajgtX7i9qW6/9e5vtCDtw6xo04F6JjiLd0ACboHa6FsOKkQzn3hGKa7Dw3bRaNGXxwKqYnAdgsx0ZoRoNX+WRA/bYF1YM0Ck5m/GXNwIDAQAB'
-public_key = '-----BEGIN PUBLIC KEY-----\n' + key + '\n-----END PUBLIC KEY-----'
+hbwjw_public_key = '-----BEGIN PUBLIC KEY-----\n' + key + '\n-----END PUBLIC KEY-----'
+
+def public_key_format(key):
+    return '-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----'.format(key)
+
 
 def encrpt(password, public_key):
     rsakey = RSA.importKey(public_key)
@@ -16,5 +20,5 @@ def encrpt(password, public_key):
 
 if __name__ == "__main__":
     pwd = sys.argv[1]
-    p = encrpt(pwd, public_key)
+    p = encrpt(pwd, hbwjw_public_key)
     print('password:', p)
