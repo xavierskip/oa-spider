@@ -166,9 +166,9 @@ class Spider(object):
         r = self.session.get(url, stream=True, timeout=timeout)
         length = int(r.headers.get('content-length', 0))
         save = 0.0
-        modulus = 1024
+        modulus = 1024 * 100
         speed = 0
-        for chunk in r.iter_content(modulus * 100):
+        for chunk in r.iter_content(chunk_size = modulus):
             output.write(chunk)
             # progress bar
             save += len(chunk)
