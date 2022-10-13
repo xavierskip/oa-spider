@@ -6,6 +6,7 @@ import sys
 import time
 import errno
 import re
+import base64
 import ddddocr
 from io import BytesIO
 from .g import FILENAMES, CONFIG
@@ -221,6 +222,9 @@ class HBCDC_wui(Spider):
     DOC_BASIC_INFO= "%s/api/doc/detail/basicInfo" % SITE
     DOCACC        = "%s/api/doc/acc/docAcc" % SITE
     DL            = "%s/weaver/weaver.file.FileDownload?fileid={}&download=1" % SITE
+    MAIL_LIST     = "%s/api/email/list/allList" % SITE
+    MAIL_VIEW     = "%s/api/email/view/mailView" % SITE
+    MAILCONTENTVIEW = "%s/api/email/view/mailContentView" %SITE
 
     def validate_code(self, code):
         '''验证码只由4个数字组成
@@ -332,15 +336,57 @@ class HBCDC_wui(Spider):
             'files': files
         }
         return data
+    
+    def get_unread_mails(self, datas):
+        s = datas.get('flagSpan').get('labelId')
+        if s == "未读":
+            return True
+        else:
+            return False
+
+    def get_mails(self):
+        payload = {'folderid': 0, 'current':1}
+        r = self.session.get(self.MAIL_LIST, params=payload)
+        datas =  r.json().get('tableBean').get('datas')
+        return datas
+    
+    def get_mail_files(self, mailid):
+        payload = {'mailId': mailid}
+        r = self.session.get(self.MAIL_VIEW, params=payload)
+        viewbean = r.json().get('viewBean')
+        title = viewbean.get('subjectText')
+        fileinfos = viewbean.get('fileInfos')
+        files = [('{}{}'.format(self.SITE,f['filelink']),f['filename']) for f in fileinfos['fileList']]
+        # mail content
+        r = self.session.get(self.MAILCONTENTVIEW, params=payload)
+        mailcontent = r.json()['mailContent']
+        note = base64.b64decode(mailcontent).decode('utf-8')
+        data = {
+            'title': title,
+            'note': note,
+            'files': files
+        }
+        return data        
 
     def todo(self, unread=True, *args, **kwargs):
         documents = []
+
         docs = self.get_documents()
         if unread:
-            docs = filter(self.get_unread_docs,docs)
-        
-        documents = [self.get_document_files(d['id']) for d in docs]
-        return documents
+            docs = filter(self.get_unread_docs,docs)        
+        # documents = [self.get_document_files(d['id']) for d in docs]
+
+        mails = self.get_mails()
+        if unread:
+            mails = filter(self.get_unread_mails,mails)
+        mail_files = [self.get_mail_files(m['id']) for m in mails]
+
+        documents.extend(mail_files)
+        limit = kwargs.get('limit')
+        if limit:
+            return documents[:limit]
+        else:
+            return documents
 
 class HBCDC(Spider):
     NAME = u'湖北省疾控中心'

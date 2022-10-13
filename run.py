@@ -45,7 +45,7 @@ def tryandtry(trytimes, sleeptime=10):
 def hbcdcdo(ini):
     u, p = ini.get('hbcdc', 'user'), ini.get('hbcdc', 'passwd')
     hbcdc = HBCDC_wui(u, p)
-    # hbcdc.do(unread=0, limit=2)
+    # hbcdc.do(unread=0, limit=5)
     hbcdc.do()
 
 @tryandtry(3, 30)
@@ -65,6 +65,7 @@ def main(ini):
         try:
             u, p = ini.get('jzwjw', 'user'), ini.get('jzwjw', 'passwd')
             jzwjw = JZWJW_NEW(u, p)
+            # jzwjw.do(unread=0, range=[0,4])
             jzwjw.do()
         except (ReadTimeout, ConnectionError) as e:
             spiderloger.error(e, exc_info=True)
