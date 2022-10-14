@@ -213,19 +213,19 @@ class Spider(object):
 class HBCDC_wui(Spider):
     NAME = '湖北省疾控中心'
     SITE = 'http://10.68.0.21'
-    LOGIN_FORM    = "%s/api/hrm/login/getLoginForm" % SITE
-    WEAVER_FILE   = "%s/weaver/weaver.file.MakeValidateCode" % SITE
-    RSA_INFO      = "%s/rsa/weaver.rsa.GetRsaInfo" % SITE
-    CHECK_LOGIN   = "%s/api/hrm/login/checkLogin" % SITE
-    DOC_LIST      = "%s/api/doc/more/list" % SITE
-    TABLE_DATAS   = "%s/api/ec/dev/table/datas" % SITE
-    DOC_BASIC_INFO= "%s/api/doc/detail/basicInfo" % SITE
-    DOCACC        = "%s/api/doc/acc/docAcc" % SITE
-    DL            = "%s/weaver/weaver.file.FileDownload?fileid={}&download=1" % SITE
-    MAIL_LIST     = "%s/api/email/list/allList" % SITE
-    MAIL_VIEW     = "%s/api/email/view/mailView" % SITE
-    MAILCONTENTVIEW = "%s/api/email/view/mailContentView" %SITE
-    READLOG         = "%s/api/doc/read/addReadLog" %SITE
+    LOGIN_FORM      = F"{SITE}/api/hrm/login/getLoginForm"
+    WEAVER_FILE     = F"{SITE}/weaver/weaver.file.MakeValidateCode"
+    RSA_INFO        = F"{SITE}/rsa/weaver.rsa.GetRsaInfo"
+    CHECK_LOGIN     = F"{SITE}/api/hrm/login/checkLogin"
+    DOC_LIST        = F"{SITE}/api/doc/more/list"
+    TABLE_DATAS     = F"{SITE}/api/ec/dev/table/datas"
+    DOC_BASIC_INFO  = F"{SITE}/api/doc/detail/basicInfo"
+    DOCACC          = F"{SITE}/api/doc/acc/docAcc"
+    DL              = F"{SITE}/weaver/weaver.file.FileDownload?fileid={{}}&download=1"
+    MAIL_LIST       = F"{SITE}/api/email/list/allList"
+    MAIL_VIEW       = F"{SITE}/api/email/view/mailView"
+    MAILCONTENTVIEW = F"{SITE}/api/email/view/mailContentView"
+    READLOG         = F"{SITE}/api/doc/read/addReadLog"
 
     def validate_code(self, code):
         '''验证码只由4个数字组成
