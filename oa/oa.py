@@ -225,6 +225,7 @@ class HBCDC_wui(Spider):
     MAIL_LIST     = "%s/api/email/list/allList" % SITE
     MAIL_VIEW     = "%s/api/email/view/mailView" % SITE
     MAILCONTENTVIEW = "%s/api/email/view/mailContentView" %SITE
+    READLOG         = "%s/api/doc/read/addReadLog" %SITE
 
     def validate_code(self, code):
         '''验证码只由4个数字组成
@@ -329,7 +330,9 @@ class HBCDC_wui(Spider):
         files = r.json()['datas']
         # print(len(files),'file')
         files = [(self.DL.format(f['imagefileid']), f['imagefilename']) for f in files]
-        # 
+        # read already
+        self.session.get(self.READLOG, params=payload)
+        # data
         data = {
             'title': title,
             'note': '',
@@ -374,7 +377,7 @@ class HBCDC_wui(Spider):
         docs = self.get_documents()
         if unread:
             docs = filter(self.get_unread_docs,docs)        
-        # documents = [self.get_document_files(d['id']) for d in docs]
+        documents = [self.get_document_files(d['id']) for d in docs]
 
         mails = self.get_mails()
         if unread:
