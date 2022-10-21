@@ -226,6 +226,7 @@ class HBCDC_wui(Spider):
     MAIL_VIEW       = F"{SITE}/api/email/view/mailView"
     MAILCONTENTVIEW = F"{SITE}/api/email/view/mailContentView"
     READLOG         = F"{SITE}/api/doc/read/addReadLog"
+    MSGREAD         = F"{SITE}/api/msgcenter/homepage/setMsgRead"
 
     def validate_code(self, code):
         '''验证码只由4个数字组成
@@ -383,6 +384,13 @@ class HBCDC_wui(Spider):
         if unread:
             mails = filter(self.get_unread_mails,mails)
         mail_files = [self.get_mail_files(m['id']) for m in mails]
+
+        # 消除未读提醒
+        if unread:
+            # 文件
+            self.session.get(self.MSGREAD, params={'id':16})
+            # 邮件
+            self.session.get(self.MSGREAD, params={'id':22})
 
         documents.extend(mail_files)
         limit = kwargs.get('limit')
