@@ -742,7 +742,7 @@ class HBWJW(Spider):
     #     self.newdoc_logit(len(links))
 
 
-''' ABANDON!!!
+# ABANDON!!! history oa
 class JZWJW(Spider):
     NAME = u'荆州市卫计委'
     ORIGIN = 'http://219.140.163.109:9090'
@@ -753,7 +753,7 @@ class JZWJW(Spider):
         r = self.session.get(url, timeout=TIMEOUT)
         # with open('captcha.jpg', 'wb') as jpg:
         #     jpg.write(r.content)
-        return Image.open(StringIO.StringIO(r.content))
+        return Image.open(BytesIO(r.content))
 
     def login(self, username, password):
         headerl = '%s/oa/function/org/../../index.jsp' % self.ORIGIN
@@ -863,7 +863,6 @@ class JZWJW(Spider):
     @need_auth
     def test_decorator(self, a='test'):
         print(a, 'Decorator test!!!')
-'''
 
 class JZWJW_NEW(Spider):
     NAME = u'荆州市卫计委'
