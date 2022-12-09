@@ -227,6 +227,7 @@ class HBCDC_wui(Spider):
     MAILCONTENTVIEW = F"{SITE}/api/email/view/mailContentView"
     READLOG         = F"{SITE}/api/doc/read/addReadLog"
     MSGREAD         = F"{SITE}/api/msgcenter/homepage/setMsgRead"
+    DOCINDEX        = F"{SITE}/spa/document/index.jsp"
 
     def validate_code(self, code):
         '''验证码只由4个数字组成
@@ -333,10 +334,16 @@ class HBCDC_wui(Spider):
         files = [(self.DL.format(f['imagefileid']), f['imagefilename']) for f in files]
         # read already
         self.session.get(self.READLOG, params=payload)
+        # get document note
+        r = self.session.get(self.DOCINDEX, params={
+            'id': docid,
+            'router': 1,
+        })
+        note = PyQuery(r.text)('#weaDocDetailHtmlContent')
         # data
         data = {
             'title': title,
-            'note': '',
+            'note': note.html(),
             'files': files
         }
         return data
