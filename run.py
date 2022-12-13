@@ -3,7 +3,7 @@
 import os
 import time
 from oa import OAini
-from oa.oa import  JZWJW_NEW, HBCDC_wui, HBWJW
+from oa.oa import  JZWJW_ZW, HBCDC_wui, JZWJW_wui,HBWJW
 from oa.exceptions import LoginFailError, VPNdisconnect
 from oa.logger import spiderloger, mailoger
 from oa.notification import get_mail_digest
@@ -11,7 +11,7 @@ from oa.network import check_hbwjw_vpn
 from requests.exceptions import ReadTimeout, ConnectionError
 from smtplib import SMTPException, SMTPAuthenticationError, SMTPServerDisconnected
 
-def tryandtry(trytimes, sleeptime=10):
+def try2try(trytimes, sleeptime=10):
     def _try(func):
         def wrapper(*args, **kwargs):
             # default TIMEOUT = 10
@@ -41,15 +41,29 @@ def tryandtry(trytimes, sleeptime=10):
         return wrapper
     return _try
 
-@tryandtry(3)
-def hbcdcdo(ini):
+@try2try(3)
+def hbcdc_do(ini):
     u, p = ini.get('hbcdc', 'user'), ini.get('hbcdc', 'passwd')
     hbcdc = HBCDC_wui(u, p)
     # hbcdc.do(unread=0, limit=5)
     hbcdc.do()
 
-@tryandtry(3, 30)
-def hbwjwdo(ini):
+@try2try(3)
+def jzwjw_do(ini):
+    u, p = ini.get('jzwjw', 'user'), ini.get('jzwjw', 'passwd')
+    jzwjw = JZWJW_wui(u, p)
+    # jzwjw.do()
+    jzwjw.do(unread=0)
+
+@try2try(3)
+def wjwzw_do(ini):
+    u, p = ini.get('wjwzw', 'user'), ini.get('wjwzw', 'passwd')
+    jzwjw = JZWJW_ZW(u, p)
+    # jzwjw.do(unread=0, range=[0,4])
+    jzwjw.do()
+
+@try2try(3, 30)
+def hbwjw_do(ini):
     if check_hbwjw_vpn():
         u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
         hbwjw = HBWJW(u, p)
@@ -62,21 +76,13 @@ def main(ini):
     catch ReadTimeout error for website is down
     """
     if ini.has_option('jzwjw', 'user'):
-        try:
-            u, p = ini.get('jzwjw', 'user'), ini.get('jzwjw', 'passwd')
-            jzwjw = JZWJW_NEW(u, p)
-            # jzwjw.do(unread=0, range=[0,4])
-            jzwjw.do()
-        except (ReadTimeout, ConnectionError) as e:
-            spiderloger.error(e, exc_info=True)
-        except LoginFailError:
-            pass
-    
+        jzwjw_do(ini)
+    if ini.has_option('wjwzw', 'user'):
+        wjwzw_do(ini)
     if ini.has_option('hbcdc', 'user'):
-        hbcdcdo(ini)
-
+        hbcdc_do(ini)
     if ini.has_option('hbwjw', 'user'):
-        hbwjwdo(ini)
+        hbwjw_do(ini)
 
     if ini.has_section('mail'):
         digest = get_mail_digest()

@@ -103,6 +103,7 @@ class TimeOutSessions(requests.Session):
 
 class Spider(object):
     NAME = "spider"
+    HOST = 'http://x.com'
     def __init__(self, username='', password=''):
         self.session = TimeOutSessions()
         if username and password:
@@ -115,6 +116,9 @@ class Spider(object):
 
     def __str__(self):
         return getattr(self, "NAME", None) or type(self).__name__
+
+    def URL(self, path):
+        return self.HOST+path
 
     def login(self, u, p):
         '''
@@ -315,7 +319,8 @@ class HBCDC_wui(Spider):
         r = re.search("src='\/images", s)
         return bool(r)
     
-    def get_document_files(self, docid):
+    def get_document_files(self, doc):
+        docid = doc['id']
         # get doc tile
         payload = {'docid': docid}
         r = self.session.get(self.DOC_BASIC_INFO, params=payload)
@@ -361,7 +366,8 @@ class HBCDC_wui(Spider):
         datas =  r.json().get('tableBean').get('datas')
         return datas
     
-    def get_mail_files(self, mailid):
+    def get_mail_files(self, mail):
+        mailid = mail['id']
         payload = {'mailId': mailid}
         r = self.session.get(self.MAIL_VIEW, params=payload)
         viewbean = r.json().get('viewBean')
@@ -377,27 +383,31 @@ class HBCDC_wui(Spider):
             'note': note,
             'files': files
         }
-        return data        
+        return data
+
+    def clear_unread(self):
+        # 文件
+        self.session.get(self.MSGREAD, params={'id':16})
+        # 邮件
+        self.session.get(self.MSGREAD, params={'id':22})
+
 
     def todo(self, unread=True, *args, **kwargs):
         documents = []
 
         docs = self.get_documents()
         if unread:
-            docs = filter(self.get_unread_docs,docs)        
-        documents = [self.get_document_files(d['id']) for d in docs]
+            docs = filter(self.get_unread_docs, docs)        
+        documents = [self.get_document_files(d) for d in docs]
 
         mails = self.get_mails()
         if unread:
-            mails = filter(self.get_unread_mails,mails)
-        mail_files = [self.get_mail_files(m['id']) for m in mails]
+            mails = filter(self.get_unread_mails, mails)
+        mail_files = [self.get_mail_files(m) for m in mails]
 
         # 消除未读提醒
         if unread:
-            # 文件
-            self.session.get(self.MSGREAD, params={'id':16})
-            # 邮件
-            self.session.get(self.MSGREAD, params={'id':22})
+            self.clear_unread()
 
         documents.extend(mail_files)
         limit = kwargs.get('limit')
@@ -405,6 +415,69 @@ class HBCDC_wui(Spider):
             return documents[:limit]
         else:
             return documents
+
+class JZWJW_wui(HBCDC_wui):
+    NAME = '荆州市卫生健康委'
+    SITE = 'http://61.136.221.87:8088'
+    HOST = SITE
+    
+    LOGIN_FORM      = F"{SITE}/api/hrm/login/getLoginForm"
+    WEAVER_FILE     = F"{SITE}/weaver/weaver.file.MakeValidateCode"
+    RSA_INFO        = F"{SITE}/rsa/weaver.rsa.GetRsaInfo"
+    CHECK_LOGIN     = F"{SITE}/api/hrm/login/checkLogin"
+    DOC_WORKFLOW    = F"{SITE}/api/portal/element/workflow"
+    LOAD_FORM       = F"{SITE}/api/workflow/reqform/loadForm"
+
+    def get_documents(self):
+        # 待办文件
+        r = self.session.post(self.DOC_WORKFLOW, data={
+            'eid': 12,
+            'hpid': 1,
+            'subCompanyId': 1,
+            'styleid': 1390381555293,
+            'ebaseid': 8
+        })
+        data = r.json()['data']['data']
+        return data
+    
+    def get_unread_docs(self, data):
+        return bool(data['requestname']['img'])
+    
+    def get_document_files(self, doc):
+        requestid = doc['requestname']['requestid']
+        r = self.session.post(self.LOAD_FORM, data={
+            'requestid': requestid
+        })
+        j = r.json()
+        maindata = j['maindata']
+        if j['params']['workflowname'] == '文件报送':
+            title = maindata['field6756']
+            note = maindata['field6759']
+            filedatas = maindata['field6760']['specialobj']['filedatas']
+            files = [(self.URL(f['loadlink']), f['filename']) for f in filedatas]
+        elif j['params']['workflowname'] == '文件传阅':
+            title = maindata['field6731']
+            note = maindata['field6735']
+            filedatas = maindata['field6734']['specialobj']['filedatas']
+            files = [(self.URL(f['loadlink']), f['filename']) for f in filedatas]
+        data = {
+            'title': title['value'],
+            'note': note['value'],
+            'files': files
+        }
+        return data
+
+    def get_mails(self):
+        return []
+
+    def get_unread_mails(self, data):
+        return False
+    
+    def get_mail_files(self, mail):
+        return []
+    
+    def clear_unread(self):
+        pass
 
 class HBCDC(Spider):
     NAME = u'湖北省疾控中心'
@@ -864,8 +937,8 @@ class JZWJW(Spider):
     def test_decorator(self, a='test'):
         print(a, 'Decorator test!!!')
 
-class JZWJW_NEW(Spider):
-    NAME = u'荆州市卫计委'
+class JZWJW_ZW(Spider):
+    NAME = u'荆州市卫健委（专）'
     ORIGIN = 'http://172.23.254.162:8030/yzoa/'
     LOGIN_URL = '%s/user/login' % ORIGIN
 
