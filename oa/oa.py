@@ -427,6 +427,7 @@ class JZWJW_wui(HBCDC_wui):
     CHECK_LOGIN     = F"{SITE}/api/hrm/login/checkLogin"
     DOC_WORKFLOW    = F"{SITE}/api/portal/element/workflow"
     LOAD_FORM       = F"{SITE}/api/workflow/reqform/loadForm"
+    UPDATE_INFO     = F"{SITE}/api/workflow/reqform/updateReqInfo"
 
     def get_documents(self):
         # 待办文件
@@ -460,6 +461,10 @@ class JZWJW_wui(HBCDC_wui):
             note = maindata['field6735']
             filedatas = maindata['field6734']['specialobj']['filedatas']
             files = [(self.URL(f['loadlink']), f['filename']) for f in filedatas]
+        # set Reading Status
+        r = self.session.post(self.UPDATE_INFO, data={
+            'requestid': requestid
+        })
         data = {
             'title': title['value'],
             'note': note['value'],

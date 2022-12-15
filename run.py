@@ -52,8 +52,8 @@ def hbcdc_do(ini):
 def jzwjw_do(ini):
     u, p = ini.get('jzwjw', 'user'), ini.get('jzwjw', 'passwd')
     jzwjw = JZWJW_wui(u, p)
-    # jzwjw.do()
-    jzwjw.do(unread=0)
+    # jzwjw.do(unread=0)
+    jzwjw.do()
 
 @try2try(3)
 def wjwzw_do(ini):
