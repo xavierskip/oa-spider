@@ -233,16 +233,32 @@ class HBCDC_wui(Spider):
     MSGREAD         = F"{SITE}/api/msgcenter/homepage/setMsgRead"
     DOCINDEX        = F"{SITE}/spa/document/index.jsp"
 
+    def pretty_match(self, code):
+        d = {
+            'O': '0',
+            'o': '0',
+            'I': '1',
+            'i': '1',
+            'l': '1',
+            'b': '0'
+        }
+        for k in d:
+            code = code.replace(k, d[k])
+        return code
+    
     def validate_code(self, code):
-        '''验证码只由4个数字组成
+        '''验证码只由4个数字字符组成
         '''
-        try:
-            n = int(code)
-        except ValueError:
-            return False
+        # 将容易识别错误的字母替换成数字
+        code = self.pretty_match(code)
+        # 去掉识别成字母的部分
+        r = re.findall("\d", code)
+        code = ''.join(r)
+        # 验证码只由四个数字组成
         if len(code) != 4:
-            return False
-        return True
+            return False, code
+        else:
+            return True, code
 
     def cc(self, func, c=1, result=None):
         ''' 不断尝试以确保得到符合的验证码，间隔时间不断增加。
@@ -250,9 +266,11 @@ class HBCDC_wui(Spider):
         if c == 0:
             return result
         key, code = func()
-        if self.validate_code(code):
+        ok, code = self.validate_code(code)
+        if ok:
             return self.cc(func, 0, (key, code))
         else:
+            print('{} code:{}'.format(c, code))
             c += 1
             time.sleep(c)
             return self.cc(func, c)
