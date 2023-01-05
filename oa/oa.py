@@ -278,7 +278,11 @@ class HBCDC_wui(Spider):
     def get_code(self):
         # get validate code key
         r = self.session.post(self.LOGIN_FORM)
-        validateCodeKey = r.json()['loginSetting']['validateCodeKey']
+        try:
+            validateCodeKey = r.json()['loginSetting']['validateCodeKey']
+        except KeyError:
+            # some site no need validateCodeKey
+            return ('no validateCodeKey', '0123')
         # print(validateCodeKey)
         # get weaver file
         payload = {'validateCodeKey': validateCodeKey}
@@ -286,6 +290,15 @@ class HBCDC_wui(Spider):
         ocr = ddddocr.DdddOcr(show_ad=False, beta=True)
         code = ocr.classification(r.content)
         # print(validateCodeKey, code)
+        
+        # write tmp img file
+        # temp_dir = os.environ['TEMP']
+        # file_name = "{}.jpg".format(code)
+        # file_path = os.path.join(temp_dir, "spider_tmp",file_name)
+        # with open(file_path, 'wb') as fd:
+        #     for chunk in r.iter_content(chunk_size=512):
+        #         fd.write(chunk)
+        
         return (validateCodeKey, code)   
 
     def login(self, username, password):
