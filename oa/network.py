@@ -118,6 +118,7 @@ def getroute():
     return IpForwardTablelist
 
 def check_route():
+    # check sangfor easyconnect
     IpForwardTablelist = getroute()
     for tmp in IpForwardTablelist:
         if tmp['ForwardDest'].startswith('2.0.1.'):

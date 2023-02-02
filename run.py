@@ -7,7 +7,7 @@ from oa.oa import  JZWJW_ZW, HBCDC_wui, JZWJW_wui,HBWJW
 from oa.exceptions import LoginFailError, VPNdisconnect
 from oa.logger import spiderloger, mailoger
 from oa.notification import get_mail_digest
-from oa.network import check_hbwjw_vpn
+from oa.network import check_hbwjw_vpn, check_route
 from requests.exceptions import ReadTimeout, ConnectionError
 from smtplib import SMTPException, SMTPAuthenticationError, SMTPServerDisconnected
 
@@ -44,7 +44,11 @@ def try2try(trytimes, sleeptime=10):
 @try2try(3)
 def hbcdc_do(ini):
     u, p = ini.get('hbcdc', 'user'), ini.get('hbcdc', 'passwd')
-    hbcdc = HBCDC_wui(u, p)
+    if check_route():
+        hbcdc = HBCDC_wui(u, p)
+    else:
+        socks = ini.get('proxy', 'socks')
+        hbcdc = HBCDC_wui(u, p, proxies = {'http': socks})
     # hbcdc.do(unread=0, limit=5)
     hbcdc.do()
 
@@ -56,7 +60,7 @@ def jzwjw_do(ini):
     jzwjw.do()
 
 @try2try(3)
-def wjwzw_do(ini):
+def jzwjwzw_do(ini):
     u, p = ini.get('wjwzw', 'user'), ini.get('wjwzw', 'passwd')
     jzwjw = JZWJW_ZW(u, p)
     # jzwjw.do(unread=0, range=[0,4])
@@ -78,7 +82,7 @@ def main(ini):
     if ini.has_option('jzwjw', 'user'):
         jzwjw_do(ini)
     if ini.has_option('wjwzw', 'user'):
-        wjwzw_do(ini)
+        jzwjwzw_do(ini)
     if ini.has_option('hbcdc', 'user'):
         hbcdc_do(ini)
     if ini.has_option('hbwjw', 'user'):

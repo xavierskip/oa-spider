@@ -97,15 +97,20 @@ def need_auth(func):  # oa system should login to do something
     return wrapper
 
 class TimeOutSessions(requests.Session):
+    def __init__(self, timeout) -> None:
+        self.timeout = timeout
+        super().__init__()
+
     def request(self, *args, **kwargs):
-        kwargs.setdefault('timeout', TIMEOUT)
+        kwargs.setdefault('timeout', self.timeout)
         return super(TimeOutSessions, self).request(*args, **kwargs)
 
 class Spider(object):
     NAME = "spider"
     HOST = 'http://x.com'
-    def __init__(self, username='', password=''):
-        self.session = TimeOutSessions()
+    def __init__(self, username='', password='', proxies={}):
+        self.session = TimeOutSessions(TIMEOUT)
+        self.session.proxies = proxies
         if username and password:
             if self.login(username, password):
                 self.auth = True
