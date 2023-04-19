@@ -1,6 +1,10 @@
+pids
+ssl-vpn.yml
+test_run.py
 notification.html
 Thumbs.db
 oa.ini
+test.ini
 .idea/
 .DS_Store
 inbox/

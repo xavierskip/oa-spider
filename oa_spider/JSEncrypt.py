@@ -5,7 +5,8 @@ from Crypto.PublicKey import RSA
 # use pycryptodome instead of PyCrypto
 # https://github.com/Legrandin/pycryptodome
 
-key = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDWtsQ5yzNpsysN8z/UOJu8JBVFWBH3UUHslkpk33dVKF2IAtcfp6DvwYyQkLl33ttJYAWajgtX7i9qW6/9e5vtCDtw6xo04F6JjiLd0ACboHa6FsOKkQzn3hGKa7Dw3bRaNGXxwKqYnAdgsx0ZoRoNX+WRA/bYF1YM0Ck5m/GXNwIDAQAB'
+# https://192.168.20.190/js/login_code.js?v=1.1  function encryption()
+key = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDJdxHylPhhOHyQQjiSH5Q6iiU0NTIyaFW+WQwi8R69un0IS4nxgdUaBIIbXipBwod0EZ125JAXGmYQbt9bQy8cq4kQJ0pdZ3vpzCxEUfnDWznBKVP/IYal9DuuPs7qE8M0oBAGaudwS83Er+Gw52x1KI3fIsUNyXwzLosfaL2ZQIDAQAB'
 hbwjw_public_key = '-----BEGIN PUBLIC KEY-----\n' + key + '\n-----END PUBLIC KEY-----'
 
 def public_key_format(key):

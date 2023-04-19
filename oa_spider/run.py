@@ -2,12 +2,12 @@
 # coding: utf-8
 import os
 import time
-from oa import OAini
-from oa.oa import  JZWJW_ZW, HBCDC_wui, JZWJW_wui,HBWJW
-from oa.exceptions import LoginFailError, VPNdisconnect
-from oa.logger import spiderloger, mailoger
-from oa.notification import get_mail_digest
-from oa.network import check_hbwjw_vpn, check_route
+from oa_spider import OAini
+from .oa import  JZWJW_ZW, HBCDC_wui, JZWJW_wui,HBWJW
+from .exceptions import LoginFailError, VPNdisconnect
+from .logger import spiderloger, mailoger
+from .notification import get_mail_digest
+from .network import check_hbwjw_vpn, check_route
 from requests.exceptions import ReadTimeout, ConnectionError
 from smtplib import SMTPException, SMTPAuthenticationError, SMTPServerDisconnected
 
@@ -26,7 +26,7 @@ def try2try(trytimes, sleeptime=10):
                     break
                 except (ReadTimeout, ConnectionError) as e:
                     if _+1 == trytimes:
-                        spiderloger.error(e, exc_info=True)
+                        spiderloger.error("Network error!", exc_info=True)
                         break
                     else:
                         spiderloger.info("%d %s try fail" %(_+1, func))
@@ -47,7 +47,7 @@ def hbcdc_do(ini):
     if check_route():
         hbcdc = HBCDC_wui(u, p)
     else:
-        socks = ini.get('proxy', 'socks')
+        socks = ini.get('proxy', 'hbcdc')
         hbcdc = HBCDC_wui(u, p, proxies = {'http': socks})
     # hbcdc.do(unread=0, limit=5)
     hbcdc.do()
@@ -59,21 +59,19 @@ def jzwjw_do(ini):
     # jzwjw.do(unread=0)
     jzwjw.do()
 
-@try2try(3)
+@try2try(2, 1)
 def jzwjwzw_do(ini):
     u, p = ini.get('wjwzw', 'user'), ini.get('wjwzw', 'passwd')
     jzwjw = JZWJW_ZW(u, p)
     # jzwjw.do(unread=0, range=[0,4])
     jzwjw.do()
 
-@try2try(3, 30)
+@try2try(3)
 def hbwjw_do(ini):
-    if check_hbwjw_vpn():
-        u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
-        hbwjw = HBWJW(u, p)
-        hbwjw.do()
-    else:
-        raise VPNdisconnect
+    u, p = ini.get('hbwjw', 'user'), ini.get('hbwjw', 'passwd')
+    socks = ini.get('proxy', 'hbwjw')
+    hbwjw = HBWJW(u, p, proxies = {'https': socks}, verify=False)
+    hbwjw.do()
 
 def main(ini):
     """
