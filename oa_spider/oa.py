@@ -115,7 +115,9 @@ class Spider(object):
         if kwargs.get('verify') != None:
             self.session.verify = kwargs.get('verify')
         if username and password:
-            if self.login(username, password):
+            # login is first requests
+            ok = self.login(username, password)
+            if ok:
                 self.auth = True
                 logger.info(u'%s登录成功✅', self)
             else:
@@ -218,8 +220,10 @@ class Spider(object):
 
         self.downloadfile_info(len(documents))  # just show the info 
 
-    @need_auth
+    # @need_auth
     def todo(self, *args, **kwargs):
+        ''' self.do() is already @need_auth
+        '''
         pass
 
 class HBCDC_wui(Spider):
