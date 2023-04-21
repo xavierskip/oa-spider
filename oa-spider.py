@@ -26,7 +26,7 @@ for ps,exe in commands.items():
         print(f'{pids[ps]}:[{ps}] is already run...')
         continue
     else:
-        print(f'run ... [{ps}]')
+        print(f'run ... [{ps}]', end=" ")
         p = subprocess.Popen(
             exe.split(" "),
             stdout=subprocess.PIPE,
@@ -34,11 +34,12 @@ for ps,exe in commands.items():
             stdin =subprocess.PIPE
             )
         pids[ps] = p.pid
+        print(f'pid:{p.pid}')
 
 with open(pids_file, "wb") as f:
     pickle.dump(pids, f)
 
-# python oa-spider.py
+# python -m oa_spider
 from oa_spider.run import main
 from oa_spider import OAini
 

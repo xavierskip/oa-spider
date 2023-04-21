@@ -24,14 +24,13 @@ def try2try(trytimes, sleeptime=10):
                 try:
                     func(*args, **kwargs)
                     break
-                except (ReadTimeout, ConnectionError) as e:
-                    if _+1 == trytimes:
-                        spiderloger.error("Network error!", exc_info=True)
-                        break
-                    else:
-                        spiderloger.info("%d %s try fail" %(_+1, func))
-                        time.sleep(sleeptime)
-                        continue
+                except ReadTimeout as e:
+                    spiderloger.info("%d %s try fail" %(_+1, func))
+                    time.sleep(sleeptime)
+                    continue
+                except ConnectionError as e:
+                    spiderloger.error("Network error!", exc_info=True)
+                    break
                 except VPNdisconnect:
                     spiderloger.error("VPN disconnect.", exc_info=True)
                     break
